@@ -1,0 +1,241 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Space+Grotesk:wght@400;500;700&display=swap");
+
+:root {
+  --bg-navy: #0d1a2e;
+  --bg-steel: #12314b;
+  --bg-ice: #d9edf7;
+  --text-main: #f6f8ff;
+  --text-muted: #bfd4e6;
+  --card: rgba(9, 18, 34, 0.8);
+  --line: rgba(176, 213, 239, 0.3);
+  --accent: #6af2bf;
+  --accent-soft: rgba(106, 242, 191, 0.2);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--text-main);
+  min-height: 100vh;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  background: linear-gradient(140deg, var(--bg-navy), #061020 60%, var(--bg-steel));
+}
+
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(76, 174, 255, 0.2), transparent 42%),
+    radial-gradient(circle at 82% 30%, rgba(106, 242, 191, 0.15), transparent 38%),
+    radial-gradient(circle at 52% 90%, rgba(217, 237, 247, 0.12), transparent 46%);
+  z-index: -1;
+}
+
+.app-shell {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+  display: grid;
+  gap: 1.2rem;
+}
+
+.hero {
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 1.2rem 1.4rem;
+  background: linear-gradient(120deg, rgba(17, 32, 56, 0.95), rgba(29, 53, 86, 0.85));
+  animation: revealUp 0.45s ease;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.hero h1 {
+  margin: 0.15rem 0;
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  font-size: clamp(2.3rem, 8vw, 3.6rem);
+  line-height: 1;
+}
+
+.hero p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.card {
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  backdrop-filter: blur(5px);
+  padding: 1rem;
+  animation: revealUp 0.55s ease;
+}
+
+h2 {
+  margin: 0 0 0.8rem;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+h3 {
+  margin: 0.2rem 0;
+  font-size: 0.95rem;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+  gap: 0.8rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.92rem;
+}
+
+select,
+input[type="range"] {
+  width: 100%;
+}
+
+select {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.52rem;
+  background: rgba(8, 14, 26, 0.9);
+  color: var(--text-main);
+  font-family: inherit;
+}
+
+#duration-value {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.selector-wrap {
+  margin-top: 0.9rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.hint {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  background: rgba(15, 27, 47, 0.92);
+  font-size: 0.8rem;
+}
+
+.chip input {
+  margin: 0;
+}
+
+button {
+  margin-top: 1rem;
+  padding: 0.72rem 1.2rem;
+  border: none;
+  border-radius: 999px;
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 1rem;
+  background: linear-gradient(90deg, var(--accent), #9cf7d5);
+  color: #052118;
+  cursor: pointer;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#workout-meta {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+#workout-list,
+.history-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.workout-item,
+.history-item {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.65rem 0.75rem;
+  background: rgba(8, 14, 25, 0.87);
+}
+
+.workout-item h4,
+.history-item h4 {
+  margin: 0 0 0.2rem;
+  font-size: 0.94rem;
+}
+
+.workout-item p,
+.history-item p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+@keyframes revealUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell {
+    padding: 1rem 0.7rem 2rem;
+  }
+
+  .hero,
+  .card {
+    border-radius: 14px;
+  }
+}

@@ -1,0 +1,290 @@
+const MUSCLE_GROUPS = [
+  "chest",
+  "back",
+  "shoulders",
+  "biceps",
+  "triceps",
+  "quads",
+  "hamstrings",
+  "glutes",
+  "calves",
+  "core"
+];
+
+const EQUIPMENT_OPTIONS = [
+  "barbell",
+  "dumbbell",
+  "cable",
+  "machine",
+  "smith-machine",
+  "bodyweight",
+  "kettlebell",
+  "ez-bar",
+  "sled",
+  "landmine"
+];
+
+const SPLIT_FOCUS_MAP = {
+  "full-body": ["full body"],
+  "upper-lower": ["upper", "lower"],
+  "push-pull-legs": ["push", "pull", "legs"]
+};
+
+const FOCUS_GROUPS = {
+  "full body": MUSCLE_GROUPS,
+  upper: ["chest", "back", "shoulders", "biceps", "triceps", "core"],
+  lower: ["quads", "hamstrings", "glutes", "calves", "core"],
+  push: ["chest", "shoulders", "triceps"],
+  pull: ["back", "biceps", "core"],
+  legs: ["quads", "hamstrings", "glutes", "calves", "core"]
+};
+
+const DIFFICULTY_PRESETS = {
+  beginner: { sets: 3, reps: "10-12", rest: 90, compounds: 0.45 },
+  intermediate: { sets: 4, reps: "8-12", rest: 75, compounds: 0.6 },
+  advanced: { sets: 5, reps: "5-10", rest: 60, compounds: 0.72 }
+};
+
+const durationEl = document.getElementById("duration");
+const durationValueEl = document.getElementById("duration-value");
+const splitEl = document.getElementById("split");
+const focusEl = document.getElementById("session-focus");
+const difficultyEl = document.getElementById("difficulty");
+const muscleWrapEl = document.getElementById("muscle-groups");
+const equipmentWrapEl = document.getElementById("equipment");
+const generateBtn = document.getElementById("generate-btn");
+const resultCard = document.getElementById("result-card");
+const workoutMetaEl = document.getElementById("workout-meta");
+const workoutListEl = document.getElementById("workout-list");
+const historyListEl = document.getElementById("history-list");
+
+function init() {
+  renderCheckboxes(muscleWrapEl, MUSCLE_GROUPS, "muscle");
+  renderCheckboxes(equipmentWrapEl, EQUIPMENT_OPTIONS, "equipment", true);
+  hydrateFocusOptions(splitEl.value);
+  renderHistory();
+
+  durationEl.addEventListener("input", () => {
+    durationValueEl.textContent = `${durationEl.value} min`;
+  });
+
+  splitEl.addEventListener("change", () => {
+    hydrateFocusOptions(splitEl.value);
+  });
+
+  generateBtn.addEventListener("click", buildWorkout);
+}
+
+function renderCheckboxes(container, items, name, checked = false) {
+  container.innerHTML = "";
+  items.forEach((item) => {
+    const label = document.createElement("label");
+    label.className = "chip";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.value = item;
+    input.name = name;
+    input.checked = checked;
+
+    const text = document.createElement("span");
+    text.textContent = capitalize(item.replace("-", " "));
+
+    label.appendChild(input);
+    label.appendChild(text);
+    container.appendChild(label);
+  });
+}
+
+function hydrateFocusOptions(split) {
+  focusEl.innerHTML = "";
+  SPLIT_FOCUS_MAP[split].forEach((focus) => {
+    const option = document.createElement("option");
+    option.value = focus;
+    option.textContent = capitalize(focus);
+    focusEl.appendChild(option);
+  });
+}
+
+function buildWorkout() {
+  const selectedMuscles = getCheckedValues("muscle");
+  const selectedEquipment = getCheckedValues("equipment");
+  const duration = Number(durationEl.value);
+  const focus = focusEl.value;
+  const difficulty = difficultyEl.value;
+
+  if (!selectedEquipment.length) {
+    alert("Select at least one equipment option.");
+    return;
+  }
+
+  const defaultGroups = FOCUS_GROUPS[focus];
+  const targetMuscles = selectedMuscles.length
+    ? selectedMuscles.filter((muscle) => defaultGroups.includes(muscle))
+    : defaultGroups;
+  const finalMuscles = targetMuscles.length ? targetMuscles : defaultGroups;
+
+  const candidates = window.EXERCISES.filter(
+    (exercise) =>
+      exercise.muscles.some((muscle) => finalMuscles.includes(muscle)) &&
+      selectedEquipment.includes(exercise.equipment)
+  );
+
+  if (!candidates.length) {
+    alert("No exercises matched those filters. Add more equipment or muscle groups.");
+    return;
+  }
+
+  const desiredCount = Math.max(5, Math.min(9, Math.round(duration / 10)));
+  const session = pickBalancedExercises(candidates, finalMuscles, desiredCount, difficulty);
+  const workout = session.map((exercise, index) => {
+    const config = DIFFICULTY_PRESETS[difficulty];
+    const isCompoundLead = index < Math.ceil(desiredCount * config.compounds);
+    const sets = exercise.compound && isCompoundLead ? config.sets : Math.max(3, config.sets - 1);
+
+    return {
+      ...exercise,
+      sets,
+      reps: exercise.compound ? config.reps : "10-15",
+      rest: exercise.compound ? config.rest : config.rest - 15
+    };
+  });
+
+  renderWorkout(workout, {
+    split: splitEl.options[splitEl.selectedIndex].text,
+    focus,
+    difficulty,
+    duration,
+    muscles: finalMuscles
+  });
+
+  persistWorkout({
+    generatedAt: new Date().toISOString(),
+    split: splitEl.value,
+    focus,
+    difficulty,
+    duration,
+    exercises: workout
+  });
+
+  renderHistory();
+}
+
+function pickBalancedExercises(candidates, muscles, count, difficulty) {
+  const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+  const picked = [];
+  const covered = new Set();
+
+  for (const muscle of muscles) {
+    const match = shuffled.find(
+      (exercise) =>
+        exercise.muscles.includes(muscle) &&
+        !picked.some((item) => item.name === exercise.name)
+    );
+    if (match) {
+      picked.push(match);
+      match.muscles.forEach((m) => covered.add(m));
+    }
+    if (picked.length >= count) {
+      break;
+    }
+  }
+
+  const compoundWeight = DIFFICULTY_PRESETS[difficulty].compounds;
+  const ranked = shuffled.sort((a, b) => {
+    const aScore = (a.compound ? 1 : 0) * compoundWeight + scoreCoverage(a, covered);
+    const bScore = (b.compound ? 1 : 0) * compoundWeight + scoreCoverage(b, covered);
+    return bScore - aScore;
+  });
+
+  for (const exercise of ranked) {
+    if (picked.length >= count) {
+      break;
+    }
+    if (!picked.some((item) => item.name === exercise.name)) {
+      picked.push(exercise);
+      exercise.muscles.forEach((m) => covered.add(m));
+    }
+  }
+
+  return picked.slice(0, count);
+}
+
+function scoreCoverage(exercise, covered) {
+  return exercise.muscles.reduce((total, muscle) => total + (covered.has(muscle) ? 0.08 : 0.28), 0);
+}
+
+function renderWorkout(workout, meta) {
+  workoutMetaEl.textContent = `${meta.duration} min | ${capitalize(meta.focus)} | ${capitalize(
+    meta.difficulty
+  )} | ${meta.muscles.map(capitalize).join(", ")}`;
+
+  workoutListEl.innerHTML = "";
+  workout.forEach((item) => {
+    const li = document.createElement("li");
+    li.className = "workout-item";
+
+    const title = document.createElement("h4");
+    title.textContent = `${item.name} (${capitalize(item.equipment.replace("-", " "))})`;
+
+    const details = document.createElement("p");
+    details.textContent = `${item.sets} sets x ${item.reps} reps | Rest ${item.rest}s | Targets ${item.muscles
+      .map(capitalize)
+      .join(", ")}`;
+
+    li.appendChild(title);
+    li.appendChild(details);
+    workoutListEl.appendChild(li);
+  });
+
+  resultCard.hidden = false;
+}
+
+function persistWorkout(workout) {
+  const key = "forgefit-history";
+  const history = JSON.parse(localStorage.getItem(key) || "[]");
+  history.unshift(workout);
+  localStorage.setItem(key, JSON.stringify(history.slice(0, 10)));
+}
+
+function renderHistory() {
+  const history = JSON.parse(localStorage.getItem("forgefit-history") || "[]");
+  historyListEl.innerHTML = "";
+
+  if (!history.length) {
+    const li = document.createElement("li");
+    li.className = "history-item";
+    li.innerHTML = "<h4>No workouts yet</h4><p>Generate a workout to start tracking sessions.</p>";
+    historyListEl.appendChild(li);
+    return;
+  }
+
+  history.forEach((entry) => {
+    const li = document.createElement("li");
+    li.className = "history-item";
+
+    const date = new Date(entry.generatedAt).toLocaleString();
+    const title = document.createElement("h4");
+    title.textContent = `${capitalize(entry.focus)} | ${entry.duration} min | ${capitalize(entry.difficulty)}`;
+
+    const details = document.createElement("p");
+    details.textContent = `${date} | ${entry.exercises.length} exercises`;
+
+    li.appendChild(title);
+    li.appendChild(details);
+    historyListEl.appendChild(li);
+  });
+}
+
+function getCheckedValues(name) {
+  return [...document.querySelectorAll(`input[name=\"${name}\"]:checked`)].map((input) => input.value);
+}
+
+function capitalize(value) {
+  return value
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+init();
