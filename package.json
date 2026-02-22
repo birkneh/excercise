@@ -1,0 +1,31 @@
+{
+  "name": "excercise-app",
+  "version": "1.0.0",
+  "description": "A static strength-training planner for full gym environments. The app generates workouts based on:",
+  "main": "app.js",
+  "scripts": {
+    "build:web": "rm -rf www && mkdir -p www && cp index.html styles.css app.js exercises.js www/",
+    "cap:sync": "npm run build:web && npx cap sync",
+    "cap:copy": "npm run build:web && npx cap copy",
+    "android:open": "npm run cap:sync && npx cap open android",
+    "ios:open": "npm run cap:sync && npx cap open ios"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/birkneh/excercise.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/birkneh/excercise/issues"
+  },
+  "homepage": "https://github.com/birkneh/excercise#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/cli": "^8.1.0",
+    "@capacitor/core": "^8.1.0",
+    "@capacitor/ios": "^8.1.0"
+  }
+}

@@ -17,6 +17,34 @@ The app runs fully in-browser with no backend and stores recent workout history 
 
 Open `index.html` in your browser.
 
+## Mobile App (Capacitor)
+
+This project is now configured as a Capacitor mobile app.
+
+### Prerequisites
+
+- Node.js + npm
+- Android Studio (for Android builds)
+- Xcode (for iOS builds, macOS only)
+
+### Commands
+
+- `npm run cap:sync` - Copy latest web files into native projects and sync plugins.
+- `npm run android:open` - Sync and open the Android project in Android Studio.
+- `npm run ios:open` - Sync and open the iOS project in Xcode.
+
+### Native project folders
+
+- `android/`
+- `ios/`
+
+Web assets for native builds are generated into `www/` from:
+
+- `index.html`
+- `styles.css`
+- `app.js`
+- `exercises.js`
+
 ## Deploy to GitHub Pages
 
 This repo includes `.github/workflows/deploy-pages.yml` to deploy automatically.
