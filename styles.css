@@ -965,7 +965,7 @@ button:hover {
     padding:
       max(0.92rem, env(safe-area-inset-top))
       0.8rem
-      max(1.06rem, calc(env(safe-area-inset-bottom) + 0.62rem))
+      max(8.9rem, calc(env(safe-area-inset-bottom) + 8.5rem))
       0.8rem;
     background:
       radial-gradient(circle at 88% 10%, rgba(134, 255, 209, 0.18), transparent 30%),
@@ -1127,10 +1127,12 @@ button:hover {
   }
 
   .runner-controls {
-    position: sticky;
+    position: fixed;
+    left: 0.8rem;
+    right: 0.8rem;
     bottom: calc(env(safe-area-inset-bottom) + 0.16rem);
     z-index: 14;
-    margin-top: 0.85rem;
+    margin-top: 0;
     padding: 0.52rem;
     border-radius: 18px;
     border: 1px solid rgba(158, 218, 255, 0.36);
@@ -1176,6 +1178,8 @@ button:hover {
 
   .runner-controls {
     grid-template-columns: 1fr 1fr;
+    left: 0.62rem;
+    right: 0.62rem;
   }
 
   #dashboard-hide-btn {
