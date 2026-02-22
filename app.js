@@ -69,7 +69,7 @@ const dashboardStatusEl = document.getElementById("dashboard-status");
 const dashboardWorkoutTimerEl = document.getElementById("dashboard-workout-timer");
 const dashboardRestTimerEl = document.getElementById("dashboard-rest-timer");
 const dashboardNextBtn = document.getElementById("dashboard-next-btn");
-const dashboardRestartBtn = document.getElementById("dashboard-restart-btn");
+const dashboardStopBtn = document.getElementById("dashboard-stop-btn");
 const dashboardHideBtn = document.getElementById("dashboard-hide-btn");
 
 let activeWorkout = [];
@@ -101,7 +101,7 @@ function init() {
   generateBtn.addEventListener("click", buildWorkout);
   startWorkoutBtn.addEventListener("click", startWorkout);
   dashboardNextBtn.addEventListener("click", handleNextAction);
-  dashboardRestartBtn.addEventListener("click", restartSession);
+  dashboardStopBtn.addEventListener("click", stopWorkout);
   dashboardHideBtn.addEventListener("click", hideDashboard);
 }
 
@@ -347,7 +347,7 @@ function resetSessionRunner(workout) {
     ? `Ready: ${workout.length} exercises. Tap Start Workout Dashboard.`
     : "Generate a workout to begin.";
   dashboardNextBtn.disabled = true;
-  dashboardRestartBtn.disabled = !workout.length;
+  dashboardStopBtn.disabled = !workout.length;
   dashboardNextBtn.textContent = "Next";
   dashboardRestTimerEl.textContent = "Rest Timer: --:--";
   setDashboardVisible(false);
@@ -377,7 +377,7 @@ function startWorkout() {
   startWorkoutBtn.disabled = false;
   startWorkoutBtn.textContent = "Resume Workout Dashboard";
   dashboardNextBtn.disabled = false;
-  dashboardRestartBtn.disabled = false;
+  dashboardStopBtn.disabled = false;
   dashboardNextBtn.textContent = sessionState.isResting ? "Next (Skip Rest)" : "Next (Start Rest)";
   setDashboardVisible(true);
   renderDashboard();
@@ -449,6 +449,7 @@ function completeSession() {
   sessionState.restRemaining = 0;
   dashboardNextBtn.disabled = true;
   dashboardNextBtn.textContent = "Done";
+  dashboardStopBtn.disabled = true;
   startWorkoutBtn.disabled = false;
   startWorkoutBtn.textContent = "Start Workout Dashboard";
   runnerStatusEl.textContent = "Workout complete. Great work.";
@@ -475,10 +476,36 @@ function restartSession(keepDashboard = false) {
   startWorkoutBtn.textContent = "Start Workout Dashboard";
   dashboardNextBtn.disabled = true;
   dashboardNextBtn.textContent = "Next";
-  dashboardRestartBtn.disabled = false;
+  dashboardStopBtn.disabled = false;
   runnerStatusEl.textContent = `Ready: ${activeWorkout.length} exercises. Tap Start Workout Dashboard.`;
   dashboardRestTimerEl.textContent = "Rest Timer: --:--";
   setDashboardVisible(keepDashboard);
+  renderDashboard();
+  updateWorkoutHighlights();
+}
+
+function stopWorkout() {
+  if (!activeWorkout.length) {
+    return;
+  }
+
+  clearRestTimer();
+  clearWorkoutTimer();
+  sessionState = {
+    started: false,
+    completed: false,
+    isResting: false,
+    currentIndex: 0,
+    restRemaining: 0,
+    elapsedSeconds: 0
+  };
+  startWorkoutBtn.disabled = false;
+  startWorkoutBtn.textContent = "Start Workout Dashboard";
+  dashboardNextBtn.disabled = true;
+  dashboardNextBtn.textContent = "Next";
+  dashboardStopBtn.disabled = false;
+  runnerStatusEl.textContent = "Workout stopped. Tap Start Workout Dashboard to begin again.";
+  setDashboardVisible(false);
   renderDashboard();
   updateWorkoutHighlights();
 }
@@ -563,7 +590,7 @@ function renderDashboard() {
   dashboardDemoLinkEl.removeAttribute("aria-disabled");
 
   if (sessionState.completed) {
-    dashboardStatusEl.textContent = "Workout complete. Tap Restart to run it again.";
+    dashboardStatusEl.textContent = "Workout complete. Tap Start to run another session.";
     dashboardRestTimerEl.textContent = "Rest Timer: --:--";
     return;
   }
