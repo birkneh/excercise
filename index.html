@@ -8,9 +8,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="ForgeFit" />
     <title>ForgeFit Strength Planner</title>
-    <link rel="manifest" href="manifest.webmanifest?v=20260222i" />
+    <link rel="manifest" href="manifest.webmanifest?v=20260222j" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260222i" />
+    <link rel="stylesheet" href="styles.css?v=20260222j" />
   </head>
   <body>
     <div class="bg-layer"></div>
@@ -120,41 +120,43 @@
 
     <section class="dashboard-overlay" id="dashboard-card" hidden>
       <div class="card dashboard-panel">
-        <div class="dashboard-head">
-          <h2>Workout Dashboard</h2>
-          <p id="dashboard-progress"></p>
-        </div>
-        <div class="dashboard-mood-row">
-          <p id="dashboard-mood-pill">Ready to train</p>
-          <p id="dashboard-phase-pill">Idle</p>
-        </div>
-        <div class="dashboard-stats-grid">
-          <p id="dashboard-workout-timer">Workout Timer: 00:00</p>
-          <p id="dashboard-set-counter">Set 1/1</p>
-          <p id="dashboard-exercise-timer">Exercise Timer: 00:00</p>
-        </div>
-        <div class="dashboard-sticky-rail">
-          <div class="dashboard-progress-wrap">
-            <div class="dashboard-progress-track">
-              <span id="dashboard-progress-fill"></span>
-            </div>
-            <p id="dashboard-progress-note">0% complete</p>
+        <div class="dashboard-content">
+          <div class="dashboard-head">
+            <h2>Workout Dashboard</h2>
+            <p id="dashboard-progress"></p>
           </div>
-          <div
-            class="dashboard-exercise-track"
-            id="dashboard-exercise-track"
-            role="list"
-            aria-label="Workout progression"
-          ></div>
+          <div class="dashboard-mood-row">
+            <p id="dashboard-mood-pill">Ready to train</p>
+            <p id="dashboard-phase-pill">Idle</p>
+          </div>
+          <div class="dashboard-stats-grid">
+            <p id="dashboard-workout-timer">Workout Timer: 00:00</p>
+            <p id="dashboard-set-counter">Set 1/1</p>
+            <p id="dashboard-exercise-timer">Exercise Timer: 00:00</p>
+          </div>
+          <div class="dashboard-sticky-rail">
+            <div class="dashboard-progress-wrap">
+              <div class="dashboard-progress-track">
+                <span id="dashboard-progress-fill"></span>
+              </div>
+              <p id="dashboard-progress-note">0% complete</p>
+            </div>
+            <div
+              class="dashboard-exercise-track"
+              id="dashboard-exercise-track"
+              role="list"
+              aria-label="Workout progression"
+            ></div>
+          </div>
+          <h3 id="dashboard-exercise">-</h3>
+          <p id="dashboard-prescription"></p>
+          <ul id="dashboard-cues" class="demo-cues"></ul>
+          <a id="dashboard-demo-link" class="demo-link" href="#" target="_blank" rel="noopener noreferrer">
+            Watch video demo
+          </a>
+          <p id="dashboard-status"></p>
+          <p id="dashboard-rest-timer">Rest Timer: --:--</p>
         </div>
-        <h3 id="dashboard-exercise">-</h3>
-        <p id="dashboard-prescription"></p>
-        <ul id="dashboard-cues" class="demo-cues"></ul>
-        <a id="dashboard-demo-link" class="demo-link" href="#" target="_blank" rel="noopener noreferrer">
-          Watch video demo
-        </a>
-        <p id="dashboard-status"></p>
-        <p id="dashboard-rest-timer">Rest Timer: --:--</p>
         <div class="runner-controls">
           <button id="dashboard-next-btn" class="runner-btn runner-btn-alt" disabled>Next</button>
           <button id="dashboard-stop-btn" class="runner-btn runner-btn-alt" disabled>Stop</button>
@@ -163,7 +165,7 @@
       </div>
     </section>
 
-    <script src="exercises.js?v=20260222i"></script>
-    <script src="app.js?v=20260222i"></script>
+    <script src="exercises.js?v=20260222j"></script>
+    <script src="app.js?v=20260222j"></script>
   </body>
 </html>

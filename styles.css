@@ -375,6 +375,10 @@ button:hover {
   position: relative;
 }
 
+.dashboard-content {
+  position: relative;
+}
+
 .dashboard-panel.is-active {
   box-shadow: inset 0 0 0 1px rgba(111, 252, 201, 0.18);
 }
@@ -1196,6 +1200,42 @@ button:hover {
   50% {
     transform: translateY(-3px) scale(1.05);
     box-shadow: 0 12px 22px rgba(96, 233, 190, 0.34);
+  }
+}
+
+@media (max-width: 780px) {
+  .dashboard-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding:
+      max(0.92rem, env(safe-area-inset-top))
+      0.8rem
+      max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem))
+      0.8rem;
+  }
+
+  .dashboard-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding-bottom: 0.45rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .runner-controls {
+    position: static;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    margin-top: 0.55rem;
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-content {
+    padding-bottom: 0.32rem;
   }
 }
 
