@@ -232,6 +232,12 @@ button:hover {
   background: linear-gradient(90deg, #cae6ff, #f0fbff);
 }
 
+.action-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
 .dashboard-overlay {
   position: fixed;
   inset: 0;

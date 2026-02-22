@@ -63,7 +63,10 @@
           </div>
         </div>
 
-        <button id="generate-btn">Generate Workout</button>
+        <div class="action-row">
+          <button id="generate-btn">Generate Workout</button>
+          <button id="start-exercise-btn" class="runner-btn runner-btn-alt">Start Exercise</button>
+        </div>
       </section>
 
       <section class="card result" id="result-card" hidden>
@@ -103,7 +106,7 @@
         <p id="dashboard-status"></p>
         <p id="dashboard-rest-timer">Rest Timer: --:--</p>
         <div class="runner-controls">
-          <button id="dashboard-next-btn" class="runner-btn runner-btn-alt" disabled>Complete Set</button>
+          <button id="dashboard-next-btn" class="runner-btn runner-btn-alt" disabled>Next</button>
           <button id="dashboard-stop-btn" class="runner-btn runner-btn-alt" disabled>Stop</button>
           <button id="dashboard-hide-btn" class="runner-btn runner-btn-alt">Hide Dashboard</button>
         </div>

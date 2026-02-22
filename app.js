@@ -53,6 +53,7 @@ const difficultyEl = document.getElementById("difficulty");
 const muscleWrapEl = document.getElementById("muscle-groups");
 const equipmentWrapEl = document.getElementById("equipment");
 const generateBtn = document.getElementById("generate-btn");
+const startExerciseBtn = document.getElementById("start-exercise-btn");
 const resultCard = document.getElementById("result-card");
 const workoutMetaEl = document.getElementById("workout-meta");
 const workoutListEl = document.getElementById("workout-list");
@@ -103,7 +104,10 @@ function init() {
     hydrateFocusOptions(splitEl.value);
   });
 
-  generateBtn.addEventListener("click", buildWorkout);
+  generateBtn.addEventListener("click", () => buildWorkout(false));
+  if (startExerciseBtn) {
+    startExerciseBtn.addEventListener("click", () => buildWorkout(true));
+  }
   startWorkoutBtn.addEventListener("click", startWorkout);
   if (dashboardNextBtn) {
     dashboardNextBtn.addEventListener("click", handleNextAction);
@@ -148,7 +152,7 @@ function hydrateFocusOptions(split) {
   });
 }
 
-function buildWorkout() {
+function buildWorkout(autoStart = false) {
   clearRestTimer();
   clearWorkoutTimer();
 
@@ -213,6 +217,10 @@ function buildWorkout() {
   });
 
   renderHistory();
+
+  if (autoStart) {
+    startWorkout();
+  }
 }
 
 function pickBalancedExercises(candidates, muscles, count, difficulty) {
@@ -362,7 +370,7 @@ function resetSessionRunner(workout) {
     : "Generate a workout to begin.";
   if (dashboardNextBtn) {
     dashboardNextBtn.disabled = true;
-    dashboardNextBtn.textContent = "Complete Set";
+    dashboardNextBtn.textContent = "Next";
   }
   if (dashboardStopBtn) {
     dashboardStopBtn.disabled = !workout.length;
@@ -402,7 +410,7 @@ function startWorkout() {
   startWorkoutBtn.textContent = "Resume Workout Dashboard";
   if (dashboardNextBtn) {
     dashboardNextBtn.disabled = false;
-    dashboardNextBtn.textContent = sessionState.isResting ? "Skip Rest" : "Complete Set";
+    dashboardNextBtn.textContent = sessionState.isResting ? "Next (Skip Rest)" : "Next";
   }
   if (dashboardStopBtn) {
     dashboardStopBtn.disabled = false;
@@ -445,7 +453,7 @@ function startRestCountdown(seconds) {
   sessionState.isResting = true;
   sessionState.restRemaining = Math.max(5, Number(seconds));
   if (dashboardNextBtn) {
-    dashboardNextBtn.textContent = "Skip Rest";
+    dashboardNextBtn.textContent = "Next (Skip Rest)";
   }
   if (nextTarget && nextTarget.type === "set") {
     runnerStatusEl.textContent = `Resting before set ${nextTarget.setNumber}.`;
@@ -472,7 +480,7 @@ function advanceAfterRest() {
   sessionState.restRemaining = 0;
   sessionState.exerciseElapsedSeconds = 0;
   if (dashboardNextBtn) {
-    dashboardNextBtn.textContent = "Complete Set";
+    dashboardNextBtn.textContent = "Next";
   }
 
   if (!nextTarget || nextTarget.type === "complete") {
@@ -536,7 +544,7 @@ function restartSession(keepDashboard = false) {
   startWorkoutBtn.textContent = "Start Workout Dashboard";
   if (dashboardNextBtn) {
     dashboardNextBtn.disabled = true;
-    dashboardNextBtn.textContent = "Complete Set";
+    dashboardNextBtn.textContent = "Next";
   }
   if (dashboardStopBtn) {
     dashboardStopBtn.disabled = false;
@@ -569,7 +577,7 @@ function stopWorkout() {
   startWorkoutBtn.textContent = "Start Workout Dashboard";
   if (dashboardNextBtn) {
     dashboardNextBtn.disabled = true;
-    dashboardNextBtn.textContent = "Complete Set";
+    dashboardNextBtn.textContent = "Next";
   }
   if (dashboardStopBtn) {
     dashboardStopBtn.disabled = false;
