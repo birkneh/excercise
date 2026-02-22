@@ -232,8 +232,25 @@ function renderWorkout(workout, meta) {
       .map(capitalize)
       .join(", ")}`;
 
+    const cueList = document.createElement("ul");
+    cueList.className = "demo-cues";
+    buildDemoCues(item).forEach((cue) => {
+      const cueItem = document.createElement("li");
+      cueItem.textContent = cue;
+      cueList.appendChild(cueItem);
+    });
+
+    const demoLink = document.createElement("a");
+    demoLink.className = "demo-link";
+    demoLink.href = getDemoUrl(item);
+    demoLink.target = "_blank";
+    demoLink.rel = "noopener noreferrer";
+    demoLink.textContent = "Watch video demo";
+
     li.appendChild(title);
     li.appendChild(details);
+    li.appendChild(cueList);
+    li.appendChild(demoLink);
     workoutListEl.appendChild(li);
   });
 
@@ -278,6 +295,34 @@ function renderHistory() {
 
 function getCheckedValues(name) {
   return [...document.querySelectorAll(`input[name=\"${name}\"]:checked`)].map((input) => input.value);
+}
+
+function buildDemoCues(exercise) {
+  const cues = ["Use controlled tempo and full range of motion."];
+
+  if (exercise.compound) {
+    cues.push("Brace your core before every rep.");
+  }
+
+  if (exercise.muscles.includes("chest")) {
+    cues.push("Keep your shoulder blades pulled down and back.");
+  }
+  if (exercise.muscles.includes("back")) {
+    cues.push("Lead with elbows and avoid shrugging.");
+  }
+  if (exercise.muscles.includes("quads") || exercise.muscles.includes("glutes")) {
+    cues.push("Keep knees tracking over toes and control the descent.");
+  }
+  if (exercise.muscles.includes("core")) {
+    cues.push("Keep ribs down and avoid lower-back overextension.");
+  }
+
+  return cues.slice(0, 3);
+}
+
+function getDemoUrl(exercise) {
+  const query = `${exercise.name} proper form tutorial`;
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
 }
 
 function capitalize(value) {

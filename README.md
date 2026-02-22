@@ -7,6 +7,9 @@ A static strength-training planner for full gym environments. The app generates 
 - Difficulty and workout duration
 - Target muscle groups
 - Available equipment (barbell, dumbbell, cable, machine, smith machine, bodyweight, kettlebell, etc.)
+- Easy exercise demonstrations:
+  - Quick form cues under each generated movement
+  - Direct "Watch video demo" links (YouTube search per exercise)
 
 The app runs fully in-browser with no backend and stores recent workout history in `localStorage`.
 
