@@ -24,6 +24,10 @@ body {
   background: linear-gradient(140deg, var(--bg-navy), #061020 60%, var(--bg-steel));
 }
 
+body.dashboard-mode {
+  overflow: hidden;
+}
+
 .bg-layer {
   position: fixed;
   inset: 0;
@@ -44,8 +48,7 @@ body {
 }
 
 body.dashboard-mode .app-shell {
-  filter: blur(2.5px) saturate(0.7);
-  transform: scale(0.99);
+  display: none;
 }
 
 .hero {
@@ -242,12 +245,10 @@ button:hover {
 .dashboard-overlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
-  padding: 0.9rem;
-  display: grid;
-  place-items: center;
-  background: rgba(4, 10, 19, 0.44);
-  backdrop-filter: blur(7px);
+  z-index: 60;
+  padding: 0;
+  display: block;
+  background: linear-gradient(160deg, rgba(7, 18, 34, 0.98), rgba(18, 40, 65, 0.98));
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.16s ease;
@@ -259,12 +260,15 @@ button:hover {
 }
 
 .dashboard-panel {
-  width: min(660px, 100%);
-  max-height: 94vh;
+  width: 100vw;
+  height: 100dvh;
+  max-height: none;
   overflow: auto;
-  border-color: rgba(106, 242, 191, 0.5);
-  box-shadow: 0 0 0 1px rgba(106, 242, 191, 0.16);
-  background: linear-gradient(160deg, rgba(7, 18, 34, 0.96), rgba(18, 40, 65, 0.9));
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom)) 1rem;
 }
 
 .dashboard-head {
