@@ -4,7 +4,7 @@
   "description": "A static strength-training planner for full gym environments. The app generates workouts based on:",
   "main": "app.js",
   "scripts": {
-    "build:web": "rm -rf www && mkdir -p www && cp index.html styles.css app.js exercises.js www/",
+    "build:web": "rm -rf www && mkdir -p www && cp index.html styles.css app.js exercises.js manifest.webmanifest service-worker.js icon-192.png icon-512.png apple-touch-icon.png www/",
     "cap:sync": "npm run build:web && npx cap sync",
     "cap:copy": "npm run build:web && npx cap copy",
     "android:open": "npm run cap:sync && npx cap open android",

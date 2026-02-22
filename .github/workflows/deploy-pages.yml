@@ -30,7 +30,7 @@ jobs:
       - name: Prepare static artifact
         run: |
           mkdir -p _site
-          cp index.html styles.css app.js exercises.js _site/
+          cp index.html styles.css app.js exercises.js manifest.webmanifest service-worker.js icon-192.png icon-512.png apple-touch-icon.png _site/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

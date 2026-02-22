@@ -91,6 +91,7 @@ let restIntervalId = null;
 let workoutIntervalId = null;
 
 function init() {
+  registerServiceWorker();
   renderCheckboxes(muscleWrapEl, MUSCLE_GROUPS, "muscle");
   renderCheckboxes(equipmentWrapEl, EQUIPMENT_OPTIONS, "equipment", true);
   hydrateFocusOptions(splitEl.value);
@@ -912,6 +913,17 @@ function capitalize(value) {
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) {
+    return;
+  }
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(() => {
+      // Intentionally silent. App works without service worker if registration fails.
+    });
+  });
 }
 
 init();

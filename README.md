@@ -21,6 +21,20 @@ A static strength-training planner for full gym environments. The app generates 
 
 The app runs fully in-browser with no backend and stores recent workout history in `localStorage`.
 
+## iPhone App Without $99/Year
+
+Use the GitHub Pages build as a Progressive Web App (PWA).
+
+1. Open `https://birkneh.github.io/excercise/` in Safari on iPhone.
+2. Tap Share.
+3. Tap **Add to Home Screen**.
+4. Launch ForgeFit from your home screen like an app.
+
+Notes:
+
+- This path does not require Apple Developer Program payment.
+- The app supports standalone display and offline app shell caching.
+
 ## Run locally
 
 Open `index.html` in your browser.
@@ -52,6 +66,11 @@ Web assets for native builds are generated into `www/` from:
 - `styles.css`
 - `app.js`
 - `exercises.js`
+- `manifest.webmanifest`
+- `service-worker.js`
+- `icon-192.png`
+- `icon-512.png`
+- `apple-touch-icon.png`
 
 ## Deploy to GitHub Pages
 
@@ -70,3 +89,5 @@ This repo includes `.github/workflows/deploy-pages.yml` to deploy automatically.
 - `styles.css` - visual design and responsive layout
 - `exercises.js` - exercise dataset
 - `app.js` - workout generation and history logic
+- `manifest.webmanifest` - PWA metadata
+- `service-worker.js` - offline app shell cache
