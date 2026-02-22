@@ -11,7 +11,8 @@ A static strength-training planner for full gym environments. The app generates 
   - Quick form cues under each generated movement
   - Direct "Watch video demo" links (YouTube search per exercise)
 - Guided gym schedule runner:
-  - `Start Workout Dashboard` opens a dedicated active-session dashboard
+  - `Start Workout Dashboard` opens a fullscreen focus dashboard over the planner
+  - Workout timer counts continuously during the active session
   - Rest timer between exercises
   - `Next` button can skip rest and move on immediately
 

@@ -66,9 +66,11 @@ const dashboardPrescriptionEl = document.getElementById("dashboard-prescription"
 const dashboardCuesEl = document.getElementById("dashboard-cues");
 const dashboardDemoLinkEl = document.getElementById("dashboard-demo-link");
 const dashboardStatusEl = document.getElementById("dashboard-status");
+const dashboardWorkoutTimerEl = document.getElementById("dashboard-workout-timer");
 const dashboardRestTimerEl = document.getElementById("dashboard-rest-timer");
 const dashboardNextBtn = document.getElementById("dashboard-next-btn");
 const dashboardRestartBtn = document.getElementById("dashboard-restart-btn");
+const dashboardHideBtn = document.getElementById("dashboard-hide-btn");
 
 let activeWorkout = [];
 let sessionState = {
@@ -76,9 +78,11 @@ let sessionState = {
   completed: false,
   isResting: false,
   currentIndex: 0,
-  restRemaining: 0
+  restRemaining: 0,
+  elapsedSeconds: 0
 };
 let restIntervalId = null;
+let workoutIntervalId = null;
 
 function init() {
   renderCheckboxes(muscleWrapEl, MUSCLE_GROUPS, "muscle");
@@ -98,6 +102,7 @@ function init() {
   startWorkoutBtn.addEventListener("click", startWorkout);
   dashboardNextBtn.addEventListener("click", handleNextAction);
   dashboardRestartBtn.addEventListener("click", restartSession);
+  dashboardHideBtn.addEventListener("click", hideDashboard);
 }
 
 function renderCheckboxes(container, items, name, checked = false) {
@@ -133,6 +138,7 @@ function hydrateFocusOptions(split) {
 
 function buildWorkout() {
   clearRestTimer();
+  clearWorkoutTimer();
 
   const selectedMuscles = getCheckedValues("muscle");
   const selectedEquipment = getCheckedValues("equipment");
@@ -324,13 +330,15 @@ function renderHistory() {
 
 function resetSessionRunner(workout) {
   clearRestTimer();
+  clearWorkoutTimer();
   activeWorkout = workout;
   sessionState = {
     started: false,
     completed: false,
     isResting: false,
     currentIndex: 0,
-    restRemaining: 0
+    restRemaining: 0,
+    elapsedSeconds: 0
   };
 
   startWorkoutBtn.disabled = !workout.length;
@@ -353,26 +361,27 @@ function startWorkout() {
   }
 
   if (sessionState.completed) {
-    restartSession();
+    restartSession(true);
   }
 
-  sessionState.started = true;
-  sessionState.completed = false;
-  sessionState.isResting = false;
-  sessionState.currentIndex = Math.min(sessionState.currentIndex, activeWorkout.length - 1);
-  sessionState.restRemaining = 0;
+  if (!sessionState.started) {
+    sessionState.started = true;
+    sessionState.completed = false;
+    sessionState.isResting = false;
+    sessionState.currentIndex = Math.min(sessionState.currentIndex, activeWorkout.length - 1);
+    sessionState.restRemaining = 0;
+    startWorkoutTimer();
+    runnerStatusEl.textContent = "Workout running. Dashboard can be reopened anytime.";
+  }
 
-  startWorkoutBtn.disabled = true;
-  startWorkoutBtn.textContent = "Workout Running";
-  runnerStatusEl.textContent = "Workout is running in dashboard mode.";
+  startWorkoutBtn.disabled = false;
+  startWorkoutBtn.textContent = "Resume Workout Dashboard";
   dashboardNextBtn.disabled = false;
   dashboardRestartBtn.disabled = false;
-  dashboardNextBtn.textContent = "Next (Start Rest)";
-  dashboardRestTimerEl.textContent = "Rest Timer: --:--";
+  dashboardNextBtn.textContent = sessionState.isResting ? "Next (Skip Rest)" : "Next (Start Rest)";
   setDashboardVisible(true);
   renderDashboard();
   updateWorkoutHighlights();
-  dashboardCardEl.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function handleNextAction() {
@@ -401,13 +410,12 @@ function startRestCountdown(seconds) {
   sessionState.restRemaining = Math.max(5, Number(seconds));
   dashboardNextBtn.textContent = "Next (Skip Rest)";
   runnerStatusEl.textContent = `Resting before Exercise ${sessionState.currentIndex + 2}.`;
-  dashboardRestTimerEl.textContent = `Rest Timer: ${formatTime(sessionState.restRemaining)}`;
   renderDashboard();
   updateWorkoutHighlights();
 
   restIntervalId = setInterval(() => {
     sessionState.restRemaining -= 1;
-    dashboardRestTimerEl.textContent = `Rest Timer: ${formatTime(sessionState.restRemaining)}`;
+    renderDashboard();
 
     if (sessionState.restRemaining <= 0) {
       clearRestTimer();
@@ -421,7 +429,6 @@ function moveToNextExercise() {
   sessionState.restRemaining = 0;
   sessionState.currentIndex += 1;
   dashboardNextBtn.textContent = "Next (Start Rest)";
-  dashboardRestTimerEl.textContent = "Rest Timer: --:--";
 
   if (sessionState.currentIndex >= activeWorkout.length) {
     completeSession();
@@ -435,12 +442,13 @@ function moveToNextExercise() {
 
 function completeSession() {
   clearRestTimer();
+  clearWorkoutTimer();
   sessionState.completed = true;
   sessionState.started = false;
   sessionState.isResting = false;
+  sessionState.restRemaining = 0;
   dashboardNextBtn.disabled = true;
   dashboardNextBtn.textContent = "Done";
-  dashboardRestTimerEl.textContent = "Rest Timer: --:--";
   startWorkoutBtn.disabled = false;
   startWorkoutBtn.textContent = "Start Workout Dashboard";
   runnerStatusEl.textContent = "Workout complete. Great work.";
@@ -448,18 +456,20 @@ function completeSession() {
   updateWorkoutHighlights(true);
 }
 
-function restartSession() {
+function restartSession(keepDashboard = false) {
   if (!activeWorkout.length) {
     return;
   }
 
   clearRestTimer();
+  clearWorkoutTimer();
   sessionState = {
     started: false,
     completed: false,
     isResting: false,
     currentIndex: 0,
-    restRemaining: 0
+    restRemaining: 0,
+    elapsedSeconds: 0
   };
   startWorkoutBtn.disabled = false;
   startWorkoutBtn.textContent = "Start Workout Dashboard";
@@ -468,15 +478,42 @@ function restartSession() {
   dashboardRestartBtn.disabled = false;
   runnerStatusEl.textContent = `Ready: ${activeWorkout.length} exercises. Tap Start Workout Dashboard.`;
   dashboardRestTimerEl.textContent = "Rest Timer: --:--";
-  setDashboardVisible(false);
+  setDashboardVisible(keepDashboard);
   renderDashboard();
   updateWorkoutHighlights();
+}
+
+function hideDashboard() {
+  setDashboardVisible(false);
+  if (sessionState.started && !sessionState.completed) {
+    runnerStatusEl.textContent = "Workout running in background. Tap Resume Workout Dashboard anytime.";
+  }
 }
 
 function clearRestTimer() {
   if (restIntervalId) {
     clearInterval(restIntervalId);
     restIntervalId = null;
+  }
+}
+
+function startWorkoutTimer() {
+  if (workoutIntervalId) {
+    return;
+  }
+  workoutIntervalId = setInterval(() => {
+    if (!sessionState.started || sessionState.completed) {
+      return;
+    }
+    sessionState.elapsedSeconds += 1;
+    renderDashboard();
+  }, 1000);
+}
+
+function clearWorkoutTimer() {
+  if (workoutIntervalId) {
+    clearInterval(workoutIntervalId);
+    workoutIntervalId = null;
   }
 }
 
@@ -487,6 +524,7 @@ function formatActiveExerciseText(index) {
 
 function setDashboardVisible(visible) {
   dashboardCardEl.hidden = !visible;
+  document.body.classList.toggle("dashboard-mode", visible);
 }
 
 function renderDashboard() {
@@ -495,6 +533,7 @@ function renderDashboard() {
     dashboardExerciseEl.textContent = "-";
     dashboardPrescriptionEl.textContent = "";
     dashboardStatusEl.textContent = "Generate a workout to start dashboard mode.";
+    dashboardWorkoutTimerEl.textContent = "Workout Timer: 00:00";
     dashboardRestTimerEl.textContent = "Rest Timer: --:--";
     dashboardCuesEl.innerHTML = "";
     dashboardDemoLinkEl.href = "#";
@@ -509,6 +548,7 @@ function renderDashboard() {
   const targets = exercise.muscles.map(capitalize).join(", ");
 
   dashboardProgressEl.textContent = `Exercise ${displayIndex + 1} of ${activeWorkout.length}`;
+  dashboardWorkoutTimerEl.textContent = `Workout Timer: ${formatElapsedTime(sessionState.elapsedSeconds)}`;
   dashboardExerciseEl.textContent = exercise.name;
   dashboardPrescriptionEl.textContent = `${exercise.sets} sets x ${exercise.reps} reps | Rest ${exercise.rest}s | ${targets}`;
 
@@ -612,6 +652,22 @@ function formatTime(totalSeconds) {
   const seconds = Math.floor(totalSeconds % 60)
     .toString()
     .padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
+function formatElapsedTime(totalSeconds) {
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = Math.floor(safeSeconds % 60)
+    .toString()
+    .padStart(2, "0");
+
+  if (hours > 0) {
+    return `${hours}:${minutes}:${seconds}`;
+  }
   return `${minutes}:${seconds}`;
 }
 

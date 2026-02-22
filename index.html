@@ -79,11 +79,19 @@
         <ul id="workout-list"></ul>
       </section>
 
-      <section class="card dashboard" id="dashboard-card" hidden>
+      <section class="card history">
+        <h2>Recent Workouts</h2>
+        <ul id="history-list" class="history-list"></ul>
+      </section>
+    </main>
+
+    <section class="dashboard-overlay" id="dashboard-card" hidden>
+      <div class="card dashboard-panel">
         <div class="dashboard-head">
           <h2>Workout Dashboard</h2>
           <p id="dashboard-progress"></p>
         </div>
+        <p id="dashboard-workout-timer">Workout Timer: 00:00</p>
         <h3 id="dashboard-exercise">-</h3>
         <p id="dashboard-prescription"></p>
         <ul id="dashboard-cues" class="demo-cues"></ul>
@@ -95,14 +103,10 @@
         <div class="runner-controls">
           <button id="dashboard-next-btn" class="runner-btn runner-btn-alt" disabled>Next</button>
           <button id="dashboard-restart-btn" class="runner-btn runner-btn-alt" disabled>Restart</button>
+          <button id="dashboard-hide-btn" class="runner-btn runner-btn-alt">Hide Dashboard</button>
         </div>
-      </section>
-
-      <section class="card history">
-        <h2>Recent Workouts</h2>
-        <ul id="history-list" class="history-list"></ul>
-      </section>
-    </main>
+      </div>
+    </section>
 
     <script src="exercises.js"></script>
     <script src="app.js"></script>

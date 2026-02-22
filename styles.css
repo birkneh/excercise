@@ -40,6 +40,12 @@ body {
   padding: 2rem 1rem 4rem;
   display: grid;
   gap: 1.2rem;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+body.dashboard-mode .app-shell {
+  filter: blur(2.5px) saturate(0.7);
+  transform: scale(0.99);
 }
 
 .hero {
@@ -226,9 +232,24 @@ button:hover {
   background: linear-gradient(90deg, #cae6ff, #f0fbff);
 }
 
-.dashboard {
-  border-color: rgba(106, 242, 191, 0.45);
-  box-shadow: 0 0 0 1px rgba(106, 242, 191, 0.18);
+.dashboard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  padding: 0.9rem;
+  display: grid;
+  place-items: center;
+  background: rgba(4, 10, 19, 0.44);
+  backdrop-filter: blur(7px);
+}
+
+.dashboard-panel {
+  width: min(660px, 100%);
+  max-height: 94vh;
+  overflow: auto;
+  border-color: rgba(106, 242, 191, 0.5);
+  box-shadow: 0 0 0 1px rgba(106, 242, 191, 0.16);
+  background: linear-gradient(160deg, rgba(7, 18, 34, 0.96), rgba(18, 40, 65, 0.9));
 }
 
 .dashboard-head {
@@ -240,6 +261,7 @@ button:hover {
 }
 
 #dashboard-progress,
+#dashboard-workout-timer,
 #dashboard-prescription,
 #dashboard-status,
 #dashboard-rest-timer {
@@ -251,6 +273,11 @@ button:hover {
 #dashboard-exercise {
   margin-top: 0.55rem;
   font-size: 1.05rem;
+}
+
+#dashboard-workout-timer {
+  color: #aef8d9;
+  letter-spacing: 0.05em;
 }
 
 #dashboard-status {
