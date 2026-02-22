@@ -74,14 +74,28 @@
         <div class="session-runner" id="session-runner">
           <h3>Gym Schedule Runner</h3>
           <p id="runner-status">Generate a workout to begin.</p>
-          <p id="rest-timer">Rest Timer: --:--</p>
-          <div class="runner-controls">
-            <button id="start-workout-btn" class="runner-btn">Start Workout</button>
-            <button id="next-btn" class="runner-btn runner-btn-alt" disabled>Next</button>
-            <button id="restart-btn" class="runner-btn runner-btn-alt" disabled>Restart</button>
-          </div>
+          <button id="start-workout-btn" class="runner-btn">Start Workout Dashboard</button>
         </div>
         <ul id="workout-list"></ul>
+      </section>
+
+      <section class="card dashboard" id="dashboard-card" hidden>
+        <div class="dashboard-head">
+          <h2>Workout Dashboard</h2>
+          <p id="dashboard-progress"></p>
+        </div>
+        <h3 id="dashboard-exercise">-</h3>
+        <p id="dashboard-prescription"></p>
+        <ul id="dashboard-cues" class="demo-cues"></ul>
+        <a id="dashboard-demo-link" class="demo-link" href="#" target="_blank" rel="noopener noreferrer">
+          Watch video demo
+        </a>
+        <p id="dashboard-status"></p>
+        <p id="dashboard-rest-timer">Rest Timer: --:--</p>
+        <div class="runner-controls">
+          <button id="dashboard-next-btn" class="runner-btn runner-btn-alt" disabled>Next</button>
+          <button id="dashboard-restart-btn" class="runner-btn runner-btn-alt" disabled>Restart</button>
+        </div>
       </section>
 
       <section class="card history">

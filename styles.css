@@ -203,16 +203,10 @@ button:hover {
   letter-spacing: 0.06em;
 }
 
-#runner-status,
-#rest-timer {
+#runner-status {
   margin: 0;
   color: var(--text-muted);
   font-size: 0.83rem;
-}
-
-#rest-timer {
-  margin-top: 0.25rem;
-  color: #d7ffeb;
 }
 
 .runner-controls {
@@ -230,6 +224,41 @@ button:hover {
 
 .runner-btn-alt {
   background: linear-gradient(90deg, #cae6ff, #f0fbff);
+}
+
+.dashboard {
+  border-color: rgba(106, 242, 191, 0.45);
+  box-shadow: 0 0 0 1px rgba(106, 242, 191, 0.18);
+}
+
+.dashboard-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+#dashboard-progress,
+#dashboard-prescription,
+#dashboard-status,
+#dashboard-rest-timer {
+  margin: 0.2rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+#dashboard-exercise {
+  margin-top: 0.55rem;
+  font-size: 1.05rem;
+}
+
+#dashboard-status {
+  margin-top: 0.55rem;
+}
+
+#dashboard-rest-timer {
+  color: #d7ffeb;
 }
 
 #workout-list,
@@ -291,6 +320,11 @@ button:hover {
 
 .demo-link:hover {
   color: #d3ffec;
+}
+
+.demo-link[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 @keyframes revealUp {

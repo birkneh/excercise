@@ -58,10 +58,17 @@ const workoutMetaEl = document.getElementById("workout-meta");
 const workoutListEl = document.getElementById("workout-list");
 const historyListEl = document.getElementById("history-list");
 const runnerStatusEl = document.getElementById("runner-status");
-const restTimerEl = document.getElementById("rest-timer");
 const startWorkoutBtn = document.getElementById("start-workout-btn");
-const nextBtn = document.getElementById("next-btn");
-const restartBtn = document.getElementById("restart-btn");
+const dashboardCardEl = document.getElementById("dashboard-card");
+const dashboardProgressEl = document.getElementById("dashboard-progress");
+const dashboardExerciseEl = document.getElementById("dashboard-exercise");
+const dashboardPrescriptionEl = document.getElementById("dashboard-prescription");
+const dashboardCuesEl = document.getElementById("dashboard-cues");
+const dashboardDemoLinkEl = document.getElementById("dashboard-demo-link");
+const dashboardStatusEl = document.getElementById("dashboard-status");
+const dashboardRestTimerEl = document.getElementById("dashboard-rest-timer");
+const dashboardNextBtn = document.getElementById("dashboard-next-btn");
+const dashboardRestartBtn = document.getElementById("dashboard-restart-btn");
 
 let activeWorkout = [];
 let sessionState = {
@@ -89,8 +96,8 @@ function init() {
 
   generateBtn.addEventListener("click", buildWorkout);
   startWorkoutBtn.addEventListener("click", startWorkout);
-  nextBtn.addEventListener("click", handleNextAction);
-  restartBtn.addEventListener("click", restartSession);
+  dashboardNextBtn.addEventListener("click", handleNextAction);
+  dashboardRestartBtn.addEventListener("click", restartSession);
 }
 
 function renderCheckboxes(container, items, name, checked = false) {
@@ -327,13 +334,16 @@ function resetSessionRunner(workout) {
   };
 
   startWorkoutBtn.disabled = !workout.length;
-  nextBtn.disabled = true;
-  restartBtn.disabled = !workout.length;
-  nextBtn.textContent = "Next";
+  startWorkoutBtn.textContent = "Start Workout Dashboard";
   runnerStatusEl.textContent = workout.length
-    ? `Ready: ${workout.length} exercises. Tap Start Workout.`
+    ? `Ready: ${workout.length} exercises. Tap Start Workout Dashboard.`
     : "Generate a workout to begin.";
-  restTimerEl.textContent = "Rest Timer: --:--";
+  dashboardNextBtn.disabled = true;
+  dashboardRestartBtn.disabled = !workout.length;
+  dashboardNextBtn.textContent = "Next";
+  dashboardRestTimerEl.textContent = "Rest Timer: --:--";
+  setDashboardVisible(false);
+  renderDashboard();
   updateWorkoutHighlights();
 }
 
@@ -353,12 +363,16 @@ function startWorkout() {
   sessionState.restRemaining = 0;
 
   startWorkoutBtn.disabled = true;
-  nextBtn.disabled = false;
-  restartBtn.disabled = false;
-  nextBtn.textContent = "Next (Start Rest)";
-  runnerStatusEl.textContent = formatActiveExerciseText(sessionState.currentIndex);
-  restTimerEl.textContent = "Rest Timer: --:--";
+  startWorkoutBtn.textContent = "Workout Running";
+  runnerStatusEl.textContent = "Workout is running in dashboard mode.";
+  dashboardNextBtn.disabled = false;
+  dashboardRestartBtn.disabled = false;
+  dashboardNextBtn.textContent = "Next (Start Rest)";
+  dashboardRestTimerEl.textContent = "Rest Timer: --:--";
+  setDashboardVisible(true);
+  renderDashboard();
   updateWorkoutHighlights();
+  dashboardCardEl.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function handleNextAction() {
@@ -385,14 +399,15 @@ function startRestCountdown(seconds) {
   clearRestTimer();
   sessionState.isResting = true;
   sessionState.restRemaining = Math.max(5, Number(seconds));
-  nextBtn.textContent = "Next (Skip Rest)";
+  dashboardNextBtn.textContent = "Next (Skip Rest)";
   runnerStatusEl.textContent = `Resting before Exercise ${sessionState.currentIndex + 2}.`;
-  restTimerEl.textContent = `Rest Timer: ${formatTime(sessionState.restRemaining)}`;
+  dashboardRestTimerEl.textContent = `Rest Timer: ${formatTime(sessionState.restRemaining)}`;
+  renderDashboard();
   updateWorkoutHighlights();
 
   restIntervalId = setInterval(() => {
     sessionState.restRemaining -= 1;
-    restTimerEl.textContent = `Rest Timer: ${formatTime(sessionState.restRemaining)}`;
+    dashboardRestTimerEl.textContent = `Rest Timer: ${formatTime(sessionState.restRemaining)}`;
 
     if (sessionState.restRemaining <= 0) {
       clearRestTimer();
@@ -405,8 +420,8 @@ function moveToNextExercise() {
   sessionState.isResting = false;
   sessionState.restRemaining = 0;
   sessionState.currentIndex += 1;
-  nextBtn.textContent = "Next (Start Rest)";
-  restTimerEl.textContent = "Rest Timer: --:--";
+  dashboardNextBtn.textContent = "Next (Start Rest)";
+  dashboardRestTimerEl.textContent = "Rest Timer: --:--";
 
   if (sessionState.currentIndex >= activeWorkout.length) {
     completeSession();
@@ -414,6 +429,7 @@ function moveToNextExercise() {
   }
 
   runnerStatusEl.textContent = formatActiveExerciseText(sessionState.currentIndex);
+  renderDashboard();
   updateWorkoutHighlights();
 }
 
@@ -422,12 +438,13 @@ function completeSession() {
   sessionState.completed = true;
   sessionState.started = false;
   sessionState.isResting = false;
-  nextBtn.disabled = true;
+  dashboardNextBtn.disabled = true;
+  dashboardNextBtn.textContent = "Done";
+  dashboardRestTimerEl.textContent = "Rest Timer: --:--";
   startWorkoutBtn.disabled = false;
-  startWorkoutBtn.textContent = "Start Workout";
-  nextBtn.textContent = "Next";
+  startWorkoutBtn.textContent = "Start Workout Dashboard";
   runnerStatusEl.textContent = "Workout complete. Great work.";
-  restTimerEl.textContent = "Rest Timer: --:--";
+  renderDashboard();
   updateWorkoutHighlights(true);
 }
 
@@ -445,10 +462,14 @@ function restartSession() {
     restRemaining: 0
   };
   startWorkoutBtn.disabled = false;
-  nextBtn.disabled = true;
-  nextBtn.textContent = "Next";
-  runnerStatusEl.textContent = `Ready: ${activeWorkout.length} exercises. Tap Start Workout.`;
-  restTimerEl.textContent = "Rest Timer: --:--";
+  startWorkoutBtn.textContent = "Start Workout Dashboard";
+  dashboardNextBtn.disabled = true;
+  dashboardNextBtn.textContent = "Next";
+  dashboardRestartBtn.disabled = false;
+  runnerStatusEl.textContent = `Ready: ${activeWorkout.length} exercises. Tap Start Workout Dashboard.`;
+  dashboardRestTimerEl.textContent = "Rest Timer: --:--";
+  setDashboardVisible(false);
+  renderDashboard();
   updateWorkoutHighlights();
 }
 
@@ -462,6 +483,65 @@ function clearRestTimer() {
 function formatActiveExerciseText(index) {
   const exercise = activeWorkout[index];
   return `Exercise ${index + 1}/${activeWorkout.length}: ${exercise.name}`;
+}
+
+function setDashboardVisible(visible) {
+  dashboardCardEl.hidden = !visible;
+}
+
+function renderDashboard() {
+  if (!activeWorkout.length) {
+    dashboardProgressEl.textContent = "";
+    dashboardExerciseEl.textContent = "-";
+    dashboardPrescriptionEl.textContent = "";
+    dashboardStatusEl.textContent = "Generate a workout to start dashboard mode.";
+    dashboardRestTimerEl.textContent = "Rest Timer: --:--";
+    dashboardCuesEl.innerHTML = "";
+    dashboardDemoLinkEl.href = "#";
+    dashboardDemoLinkEl.setAttribute("aria-disabled", "true");
+    return;
+  }
+
+  const baseIndex = Math.min(sessionState.currentIndex, activeWorkout.length - 1);
+  const displayIndex =
+    sessionState.isResting && baseIndex < activeWorkout.length - 1 ? baseIndex + 1 : baseIndex;
+  const exercise = activeWorkout[displayIndex];
+  const targets = exercise.muscles.map(capitalize).join(", ");
+
+  dashboardProgressEl.textContent = `Exercise ${displayIndex + 1} of ${activeWorkout.length}`;
+  dashboardExerciseEl.textContent = exercise.name;
+  dashboardPrescriptionEl.textContent = `${exercise.sets} sets x ${exercise.reps} reps | Rest ${exercise.rest}s | ${targets}`;
+
+  dashboardCuesEl.innerHTML = "";
+  buildDemoCues(exercise).forEach((cue) => {
+    const li = document.createElement("li");
+    li.textContent = cue;
+    dashboardCuesEl.appendChild(li);
+  });
+
+  dashboardDemoLinkEl.href = getDemoUrl(exercise);
+  dashboardDemoLinkEl.removeAttribute("aria-disabled");
+
+  if (sessionState.completed) {
+    dashboardStatusEl.textContent = "Workout complete. Tap Restart to run it again.";
+    dashboardRestTimerEl.textContent = "Rest Timer: --:--";
+    return;
+  }
+
+  if (!sessionState.started) {
+    dashboardStatusEl.textContent = "Tap Start Workout Dashboard to begin.";
+    dashboardRestTimerEl.textContent = "Rest Timer: --:--";
+    return;
+  }
+
+  if (sessionState.isResting) {
+    dashboardStatusEl.textContent = `Resting before ${exercise.name}.`;
+    dashboardRestTimerEl.textContent = `Rest Timer: ${formatTime(sessionState.restRemaining)}`;
+    return;
+  }
+
+  dashboardStatusEl.textContent = formatActiveExerciseText(displayIndex);
+  dashboardRestTimerEl.textContent = "Rest Timer: --:--";
 }
 
 function updateWorkoutHighlights(markAllComplete = false) {
