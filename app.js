@@ -109,15 +109,33 @@ function init() {
     startExerciseBtn.addEventListener("click", () => buildWorkout(true));
   }
   startWorkoutBtn.addEventListener("click", startWorkout);
-  if (dashboardNextBtn) {
-    dashboardNextBtn.addEventListener("click", handleNextAction);
-  }
+  wireDashboardControls();
+}
+
+function wireDashboardControls() {
+  document.addEventListener("click", (event) => {
+    const target = event.target.closest(
+      "#dashboard-next-btn, #dashboard-stop-btn, #dashboard-restart-btn, #dashboard-hide-btn"
+    );
+    if (!target) {
+      return;
+    }
+
+    if (target.matches("#dashboard-next-btn")) {
+      handleNextAction();
+      return;
+    }
+    if (target.matches("#dashboard-stop-btn, #dashboard-restart-btn")) {
+      stopWorkout();
+      return;
+    }
+    if (target.matches("#dashboard-hide-btn")) {
+      hideDashboard();
+    }
+  });
+
   if (dashboardStopBtn) {
     dashboardStopBtn.textContent = "Stop";
-    dashboardStopBtn.addEventListener("click", stopWorkout);
-  }
-  if (dashboardHideBtn) {
-    dashboardHideBtn.addEventListener("click", hideDashboard);
   }
 }
 
@@ -369,11 +387,11 @@ function resetSessionRunner(workout) {
     ? `Ready: ${workout.length} exercises. Tap Start Workout Dashboard.`
     : "Generate a workout to begin.";
   if (dashboardNextBtn) {
-    dashboardNextBtn.disabled = true;
+    setDisabled(dashboardNextBtn, true);
     dashboardNextBtn.textContent = "Next";
   }
   if (dashboardStopBtn) {
-    dashboardStopBtn.disabled = !workout.length;
+    setDisabled(dashboardStopBtn, !workout.length);
   }
   setText(dashboardRestTimerEl, "Rest Timer: --:--");
   setDashboardVisible(false);
@@ -409,11 +427,11 @@ function startWorkout() {
   startWorkoutBtn.disabled = false;
   startWorkoutBtn.textContent = "Resume Workout Dashboard";
   if (dashboardNextBtn) {
-    dashboardNextBtn.disabled = false;
+    setDisabled(dashboardNextBtn, false);
     dashboardNextBtn.textContent = sessionState.isResting ? "Next (Skip Rest)" : "Next";
   }
   if (dashboardStopBtn) {
-    dashboardStopBtn.disabled = false;
+    setDisabled(dashboardStopBtn, false);
   }
   setDashboardVisible(true);
   renderDashboard();
@@ -510,11 +528,11 @@ function completeSession() {
   sessionState.currentSet = 1;
   sessionState.restRemaining = 0;
   if (dashboardNextBtn) {
-    dashboardNextBtn.disabled = true;
+    setDisabled(dashboardNextBtn, true);
     dashboardNextBtn.textContent = "Done";
   }
   if (dashboardStopBtn) {
-    dashboardStopBtn.disabled = true;
+    setDisabled(dashboardStopBtn, true);
   }
   startWorkoutBtn.disabled = false;
   startWorkoutBtn.textContent = "Start Workout Dashboard";
@@ -543,11 +561,11 @@ function restartSession(keepDashboard = false) {
   startWorkoutBtn.disabled = false;
   startWorkoutBtn.textContent = "Start Workout Dashboard";
   if (dashboardNextBtn) {
-    dashboardNextBtn.disabled = true;
+    setDisabled(dashboardNextBtn, true);
     dashboardNextBtn.textContent = "Next";
   }
   if (dashboardStopBtn) {
-    dashboardStopBtn.disabled = false;
+    setDisabled(dashboardStopBtn, false);
   }
   runnerStatusEl.textContent = `Ready: ${activeWorkout.length} exercises. Tap Start Workout Dashboard.`;
   setText(dashboardRestTimerEl, "Rest Timer: --:--");
@@ -576,11 +594,11 @@ function stopWorkout() {
   startWorkoutBtn.disabled = false;
   startWorkoutBtn.textContent = "Start Workout Dashboard";
   if (dashboardNextBtn) {
-    dashboardNextBtn.disabled = true;
+    setDisabled(dashboardNextBtn, true);
     dashboardNextBtn.textContent = "Next";
   }
   if (dashboardStopBtn) {
-    dashboardStopBtn.disabled = false;
+    setDisabled(dashboardStopBtn, false);
   }
   runnerStatusEl.textContent = "Workout stopped. Tap Start Workout Dashboard to begin again.";
   setDashboardVisible(false);
@@ -685,11 +703,14 @@ function getDisplayTarget() {
 
 function setDashboardVisible(visible) {
   if (dashboardCardEl) {
-    dashboardCardEl.hidden = !visible;
     if (visible) {
+      dashboardCardEl.hidden = false;
       dashboardCardEl.removeAttribute("hidden");
+      dashboardCardEl.classList.add("is-visible");
     } else {
+      dashboardCardEl.classList.remove("is-visible");
       dashboardCardEl.setAttribute("hidden", "");
+      dashboardCardEl.hidden = true;
     }
   }
   document.body.classList.toggle("dashboard-mode", visible);
@@ -871,6 +892,18 @@ function formatElapsedTime(totalSeconds) {
 function setText(element, value) {
   if (element) {
     element.textContent = value;
+  }
+}
+
+function setDisabled(element, disabled) {
+  if (!element) {
+    return;
+  }
+  element.disabled = disabled;
+  if (disabled) {
+    element.setAttribute("disabled", "");
+  } else {
+    element.removeAttribute("disabled");
   }
 }
 
