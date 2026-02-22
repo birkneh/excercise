@@ -642,8 +642,7 @@ button:hover {
 }
 
 #dashboard-next-btn,
-#dashboard-stop-btn,
-#dashboard-hide-btn {
+#dashboard-stop-btn {
   min-height: 46px;
   min-width: 118px;
   font-size: 0.95rem;
@@ -1131,12 +1130,8 @@ button:hover {
   }
 
   .runner-controls {
-    position: fixed;
-    left: 0.8rem;
-    right: 0.8rem;
-    bottom: calc(env(safe-area-inset-bottom) + 0.16rem);
-    z-index: 14;
-    margin-top: 0;
+    position: static;
+    margin-top: 0.5rem;
     padding: 0.52rem;
     border-radius: 18px;
     border: 1px solid rgba(158, 218, 255, 0.36);
@@ -1144,7 +1139,7 @@ button:hover {
     backdrop-filter: blur(8px);
     box-shadow: 0 12px 26px rgba(2, 10, 20, 0.52);
     display: grid;
-    grid-template-columns: 1fr 1fr 1.2fr;
+    grid-template-columns: 1fr 1fr;
     gap: 0.48rem;
   }
 
@@ -1166,9 +1161,6 @@ button:hover {
     background: linear-gradient(90deg, #ffd4d4, #ffc6a9);
   }
 
-  #dashboard-hide-btn {
-    background: linear-gradient(90deg, #d8e9ff, #b9dcff);
-  }
 }
 
 @media (max-width: 560px) {
@@ -1182,12 +1174,6 @@ button:hover {
 
   .runner-controls {
     grid-template-columns: 1fr 1fr;
-    left: 0.62rem;
-    right: 0.62rem;
-  }
-
-  #dashboard-hide-btn {
-    grid-column: 1 / -1;
   }
 }
 

@@ -88,7 +88,6 @@ const dashboardExerciseTrackEl = document.getElementById("dashboard-exercise-tra
 const dashboardNextBtn = document.getElementById("dashboard-next-btn");
 const dashboardStopBtn =
   document.getElementById("dashboard-stop-btn") || document.getElementById("dashboard-restart-btn");
-const dashboardHideBtn = document.getElementById("dashboard-hide-btn");
 
 let activeWorkout = [];
 let sessionState = {
@@ -140,9 +139,7 @@ function init() {
 
 function wireDashboardControls() {
   document.addEventListener("click", (event) => {
-    const target = event.target.closest(
-      "#dashboard-next-btn, #dashboard-stop-btn, #dashboard-restart-btn, #dashboard-hide-btn"
-    );
+    const target = event.target.closest("#dashboard-next-btn, #dashboard-stop-btn, #dashboard-restart-btn");
     if (!target) {
       return;
     }
@@ -153,10 +150,6 @@ function wireDashboardControls() {
     }
     if (target.matches("#dashboard-stop-btn, #dashboard-restart-btn")) {
       stopWorkout();
-      return;
-    }
-    if (target.matches("#dashboard-hide-btn")) {
-      hideDashboard();
     }
   });
 
@@ -754,13 +747,6 @@ function stopWorkout() {
   renderDashboard();
   updateWorkoutHighlights();
   focusSummaryCard();
-}
-
-function hideDashboard() {
-  setDashboardVisible(false);
-  if (sessionState.started && !sessionState.completed) {
-    runnerStatusEl.textContent = "Workout running in background. Tap Resume Workout Dashboard anytime.";
-  }
 }
 
 function clearRestTimer() {
