@@ -57,6 +57,21 @@ const resultCard = document.getElementById("result-card");
 const workoutMetaEl = document.getElementById("workout-meta");
 const workoutListEl = document.getElementById("workout-list");
 const historyListEl = document.getElementById("history-list");
+const runnerStatusEl = document.getElementById("runner-status");
+const restTimerEl = document.getElementById("rest-timer");
+const startWorkoutBtn = document.getElementById("start-workout-btn");
+const nextBtn = document.getElementById("next-btn");
+const restartBtn = document.getElementById("restart-btn");
+
+let activeWorkout = [];
+let sessionState = {
+  started: false,
+  completed: false,
+  isResting: false,
+  currentIndex: 0,
+  restRemaining: 0
+};
+let restIntervalId = null;
 
 function init() {
   renderCheckboxes(muscleWrapEl, MUSCLE_GROUPS, "muscle");
@@ -73,6 +88,9 @@ function init() {
   });
 
   generateBtn.addEventListener("click", buildWorkout);
+  startWorkoutBtn.addEventListener("click", startWorkout);
+  nextBtn.addEventListener("click", handleNextAction);
+  restartBtn.addEventListener("click", restartSession);
 }
 
 function renderCheckboxes(container, items, name, checked = false) {
@@ -107,6 +125,8 @@ function hydrateFocusOptions(split) {
 }
 
 function buildWorkout() {
+  clearRestTimer();
+
   const selectedMuscles = getCheckedValues("muscle");
   const selectedEquipment = getCheckedValues("equipment");
   const duration = Number(durationEl.value);
@@ -220,9 +240,10 @@ function renderWorkout(workout, meta) {
   )} | ${meta.muscles.map(capitalize).join(", ")}`;
 
   workoutListEl.innerHTML = "";
-  workout.forEach((item) => {
+  workout.forEach((item, index) => {
     const li = document.createElement("li");
     li.className = "workout-item";
+    li.dataset.index = String(index);
 
     const title = document.createElement("h4");
     title.textContent = `${item.name} (${capitalize(item.equipment.replace("-", " "))})`;
@@ -254,6 +275,7 @@ function renderWorkout(workout, meta) {
     workoutListEl.appendChild(li);
   });
 
+  resetSessionRunner(workout);
   resultCard.hidden = false;
 }
 
@@ -293,6 +315,181 @@ function renderHistory() {
   });
 }
 
+function resetSessionRunner(workout) {
+  clearRestTimer();
+  activeWorkout = workout;
+  sessionState = {
+    started: false,
+    completed: false,
+    isResting: false,
+    currentIndex: 0,
+    restRemaining: 0
+  };
+
+  startWorkoutBtn.disabled = !workout.length;
+  nextBtn.disabled = true;
+  restartBtn.disabled = !workout.length;
+  nextBtn.textContent = "Next";
+  runnerStatusEl.textContent = workout.length
+    ? `Ready: ${workout.length} exercises. Tap Start Workout.`
+    : "Generate a workout to begin.";
+  restTimerEl.textContent = "Rest Timer: --:--";
+  updateWorkoutHighlights();
+}
+
+function startWorkout() {
+  if (!activeWorkout.length) {
+    return;
+  }
+
+  if (sessionState.completed) {
+    restartSession();
+  }
+
+  sessionState.started = true;
+  sessionState.completed = false;
+  sessionState.isResting = false;
+  sessionState.currentIndex = Math.min(sessionState.currentIndex, activeWorkout.length - 1);
+  sessionState.restRemaining = 0;
+
+  startWorkoutBtn.disabled = true;
+  nextBtn.disabled = false;
+  restartBtn.disabled = false;
+  nextBtn.textContent = "Next (Start Rest)";
+  runnerStatusEl.textContent = formatActiveExerciseText(sessionState.currentIndex);
+  restTimerEl.textContent = "Rest Timer: --:--";
+  updateWorkoutHighlights();
+}
+
+function handleNextAction() {
+  if (!sessionState.started || !activeWorkout.length || sessionState.completed) {
+    return;
+  }
+
+  if (sessionState.isResting) {
+    clearRestTimer();
+    moveToNextExercise();
+    return;
+  }
+
+  if (sessionState.currentIndex >= activeWorkout.length - 1) {
+    completeSession();
+    return;
+  }
+
+  const restSeconds = activeWorkout[sessionState.currentIndex].rest || 60;
+  startRestCountdown(restSeconds);
+}
+
+function startRestCountdown(seconds) {
+  clearRestTimer();
+  sessionState.isResting = true;
+  sessionState.restRemaining = Math.max(5, Number(seconds));
+  nextBtn.textContent = "Next (Skip Rest)";
+  runnerStatusEl.textContent = `Resting before Exercise ${sessionState.currentIndex + 2}.`;
+  restTimerEl.textContent = `Rest Timer: ${formatTime(sessionState.restRemaining)}`;
+  updateWorkoutHighlights();
+
+  restIntervalId = setInterval(() => {
+    sessionState.restRemaining -= 1;
+    restTimerEl.textContent = `Rest Timer: ${formatTime(sessionState.restRemaining)}`;
+
+    if (sessionState.restRemaining <= 0) {
+      clearRestTimer();
+      moveToNextExercise();
+    }
+  }, 1000);
+}
+
+function moveToNextExercise() {
+  sessionState.isResting = false;
+  sessionState.restRemaining = 0;
+  sessionState.currentIndex += 1;
+  nextBtn.textContent = "Next (Start Rest)";
+  restTimerEl.textContent = "Rest Timer: --:--";
+
+  if (sessionState.currentIndex >= activeWorkout.length) {
+    completeSession();
+    return;
+  }
+
+  runnerStatusEl.textContent = formatActiveExerciseText(sessionState.currentIndex);
+  updateWorkoutHighlights();
+}
+
+function completeSession() {
+  clearRestTimer();
+  sessionState.completed = true;
+  sessionState.started = false;
+  sessionState.isResting = false;
+  nextBtn.disabled = true;
+  startWorkoutBtn.disabled = false;
+  startWorkoutBtn.textContent = "Start Workout";
+  nextBtn.textContent = "Next";
+  runnerStatusEl.textContent = "Workout complete. Great work.";
+  restTimerEl.textContent = "Rest Timer: --:--";
+  updateWorkoutHighlights(true);
+}
+
+function restartSession() {
+  if (!activeWorkout.length) {
+    return;
+  }
+
+  clearRestTimer();
+  sessionState = {
+    started: false,
+    completed: false,
+    isResting: false,
+    currentIndex: 0,
+    restRemaining: 0
+  };
+  startWorkoutBtn.disabled = false;
+  nextBtn.disabled = true;
+  nextBtn.textContent = "Next";
+  runnerStatusEl.textContent = `Ready: ${activeWorkout.length} exercises. Tap Start Workout.`;
+  restTimerEl.textContent = "Rest Timer: --:--";
+  updateWorkoutHighlights();
+}
+
+function clearRestTimer() {
+  if (restIntervalId) {
+    clearInterval(restIntervalId);
+    restIntervalId = null;
+  }
+}
+
+function formatActiveExerciseText(index) {
+  const exercise = activeWorkout[index];
+  return `Exercise ${index + 1}/${activeWorkout.length}: ${exercise.name}`;
+}
+
+function updateWorkoutHighlights(markAllComplete = false) {
+  const items = [...workoutListEl.querySelectorAll(".workout-item")];
+  items.forEach((item, index) => {
+    item.classList.remove("current", "complete");
+
+    if (markAllComplete) {
+      item.classList.add("complete");
+      return;
+    }
+
+    if (!sessionState.started && !sessionState.completed) {
+      return;
+    }
+
+    const currentTarget = sessionState.isResting
+      ? Math.min(sessionState.currentIndex + 1, activeWorkout.length - 1)
+      : sessionState.currentIndex;
+
+    if (index < currentTarget) {
+      item.classList.add("complete");
+    } else if (index === currentTarget) {
+      item.classList.add("current");
+    }
+  });
+}
+
 function getCheckedValues(name) {
   return [...document.querySelectorAll(`input[name=\"${name}\"]:checked`)].map((input) => input.value);
 }
@@ -323,6 +520,19 @@ function buildDemoCues(exercise) {
 function getDemoUrl(exercise) {
   const query = `${exercise.name} proper form tutorial`;
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+}
+
+function formatTime(totalSeconds) {
+  if (totalSeconds <= 0) {
+    return "00:00";
+  }
+  const minutes = Math.floor(totalSeconds / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = Math.floor(totalSeconds % 60)
+    .toString()
+    .padStart(2, "0");
+  return `${minutes}:${seconds}`;
 }
 
 function capitalize(value) {
