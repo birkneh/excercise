@@ -391,8 +391,12 @@ button:hover {
   margin: 0;
 }
 
+.dashboard-sticky-rail {
+  margin-top: 0.62rem;
+}
+
 .dashboard-progress-wrap {
-  margin-top: 0.68rem;
+  margin-top: 0;
   padding: 0.5rem 0.58rem 0.42rem;
   border: 1px solid rgba(158, 209, 247, 0.42);
   border-radius: 14px;
@@ -425,11 +429,14 @@ button:hover {
 }
 
 .dashboard-exercise-track {
-  margin-top: 0.5rem;
+  margin-top: 0.46rem;
   display: flex;
   gap: 0.48rem;
   overflow-x: auto;
-  padding: 0.25rem 0.08rem 0.4rem;
+  padding: 0.32rem 0.24rem 0.48rem;
+  border: 1px solid rgba(145, 213, 255, 0.24);
+  border-radius: 13px;
+  background: rgba(7, 17, 31, 0.6);
   scrollbar-width: thin;
   scrollbar-color: rgba(150, 219, 255, 0.75) rgba(9, 21, 38, 0.42);
   scroll-snap-type: x mandatory;
@@ -588,6 +595,67 @@ button:hover {
   font-size: 0.95rem;
 }
 
+@media (max-width: 780px) {
+  .dashboard-panel {
+    padding:
+      max(0.84rem, env(safe-area-inset-top))
+      0.76rem
+      max(1rem, calc(env(safe-area-inset-bottom) + 0.54rem))
+      0.76rem;
+  }
+
+  .dashboard-head h2 {
+    font-size: clamp(1.3rem, 6.2vw, 1.8rem);
+  }
+
+  .dashboard-mood-row {
+    gap: 0.4rem;
+  }
+
+  #dashboard-mood-pill,
+  #dashboard-phase-pill {
+    font-size: 0.8rem;
+    padding: 0.31rem 0.6rem;
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.42rem;
+  }
+
+  #dashboard-workout-timer,
+  #dashboard-set-counter,
+  #dashboard-exercise-timer {
+    font-size: 0.98rem;
+    min-height: 54px;
+    display: flex;
+    align-items: center;
+  }
+
+  #dashboard-progress,
+  #dashboard-progress-note,
+  #dashboard-rest-timer,
+  #dashboard-status,
+  #dashboard-prescription {
+    font-size: 0.95rem;
+  }
+
+  #dashboard-exercise {
+    margin-top: 0.75rem;
+    font-size: clamp(1.46rem, 8vw, 1.85rem);
+  }
+
+  .demo-cues {
+    font-size: 0.86rem;
+    gap: 0.22rem;
+  }
+
+  .demo-link {
+    font-size: 0.9rem;
+    margin-top: 0.55rem;
+  }
+}
+
 @keyframes pulseNext {
   0% {
     box-shadow: 0 0 0 0 rgba(122, 252, 202, 0.42);
@@ -699,46 +767,36 @@ button:hover {
     border-radius: 14px;
   }
 
-  .dashboard-panel {
-    padding:
-      max(0.88rem, env(safe-area-inset-top))
-      0.72rem
-      max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem))
-      0.72rem;
-  }
-
-  .dashboard-progress-wrap {
+  .dashboard-sticky-rail {
     position: sticky;
     top: calc(env(safe-area-inset-top) + 0.2rem);
     z-index: 8;
     margin-top: 0.52rem;
+    padding: 0.22rem;
+    border-radius: 14px;
+    border: 1px solid rgba(140, 208, 255, 0.23);
+    background: linear-gradient(180deg, rgba(5, 15, 29, 0.95), rgba(8, 19, 35, 0.88));
     box-shadow: 0 6px 18px rgba(4, 12, 24, 0.45);
   }
 
+  .dashboard-progress-wrap {
+    margin-top: 0;
+  }
+
   .dashboard-exercise-track {
-    position: sticky;
-    top: calc(env(safe-area-inset-top) + 4.1rem);
-    z-index: 7;
-    margin-top: 0.38rem;
+    margin-top: 0.34rem;
     padding-bottom: 0.48rem;
-    background: linear-gradient(180deg, rgba(7, 17, 31, 0.95), rgba(7, 17, 31, 0.55));
-    border-radius: 12px;
-    border: 1px solid rgba(148, 213, 255, 0.25);
-    padding-left: 0.3rem;
-    padding-right: 0.3rem;
+    background: linear-gradient(180deg, rgba(7, 17, 31, 0.9), rgba(7, 17, 31, 0.45));
+    border: 1px solid rgba(148, 213, 255, 0.3);
   }
 
   .exercise-chip {
-    min-width: 104px;
-    padding: 0.36rem 0.48rem;
+    min-width: 118px;
+    padding: 0.42rem 0.5rem;
   }
 
   .exercise-chip-name {
-    font-size: 0.77rem;
-  }
-
-  .dashboard-stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    font-size: 0.8rem;
   }
 
   #dashboard-workout-timer,
@@ -747,14 +805,8 @@ button:hover {
     font-size: 1rem;
   }
 
-  #dashboard-exercise {
-    margin-top: 0.8rem;
-    font-size: 1.62rem;
-  }
-
-  #dashboard-status,
-  #dashboard-prescription {
-    font-size: 0.98rem;
+  #dashboard-status {
+    margin-top: 0.5rem;
   }
 
   .runner-controls {
@@ -770,8 +822,19 @@ button:hover {
   }
 
   .runner-controls .runner-btn {
-    flex: 1 1 calc(50% - 0.3rem);
+    flex: 1 1 100%;
     margin-top: 0;
     min-width: 0;
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  .dashboard-panel {
+    min-height: -webkit-fill-available;
+    overscroll-behavior: contain;
+  }
+
+  .dashboard-sticky-rail {
+    transform: translateZ(0);
   }
 }

@@ -99,6 +99,7 @@ let sessionState = {
 let restIntervalId = null;
 let workoutIntervalId = null;
 let lastRenderedTrackIndex = -1;
+let lastTrackRenderKey = "";
 
 function init() {
   registerServiceWorker();
@@ -382,6 +383,7 @@ function resetSessionRunner(workout) {
   clearWorkoutTimer();
   activeWorkout = workout;
   lastRenderedTrackIndex = -1;
+  lastTrackRenderKey = "";
   sessionState = {
     started: false,
     completed: false,
@@ -566,6 +568,7 @@ function restartSession(keepDashboard = false) {
   clearRestTimer();
   clearWorkoutTimer();
   lastRenderedTrackIndex = -1;
+  lastTrackRenderKey = "";
   sessionState = {
     started: false,
     completed: false,
@@ -602,6 +605,7 @@ function stopWorkout() {
   clearRestTimer();
   clearWorkoutTimer();
   lastRenderedTrackIndex = -1;
+  lastTrackRenderKey = "";
   const summary = buildSessionSummary("stopped");
   sessionState = {
     started: false,
@@ -984,11 +988,16 @@ function renderExerciseTrack(activeIndex, forceComplete = false) {
   if (!dashboardExerciseTrackEl) {
     return;
   }
-  dashboardExerciseTrackEl.innerHTML = "";
-
   if (!activeWorkout.length) {
+    dashboardExerciseTrackEl.innerHTML = "";
+    lastTrackRenderKey = "";
     return;
   }
+  const renderKey = `${activeWorkout.length}|${activeIndex}|${forceComplete ? "1" : "0"}`;
+  if (lastTrackRenderKey === renderKey && dashboardExerciseTrackEl.children.length === activeWorkout.length) {
+    return;
+  }
+  dashboardExerciseTrackEl.innerHTML = "";
 
   let chipToFocus = null;
   activeWorkout.forEach((exercise, index) => {
@@ -1027,6 +1036,7 @@ function renderExerciseTrack(activeIndex, forceComplete = false) {
   }
 
   lastRenderedTrackIndex = activeIndex;
+  lastTrackRenderKey = renderKey;
 }
 
 function getCompletionPercent() {
