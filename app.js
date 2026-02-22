@@ -106,10 +106,12 @@ let restIntervalId = null;
 let workoutIntervalId = null;
 let lastRenderedTrackIndex = -1;
 let lastTrackRenderKey = "";
+let audioContext = null;
 
 function init() {
   syncViewportHeight();
   registerServiceWorker();
+  primeAudioOnInteraction();
   renderCheckboxes(muscleWrapEl, MUSCLE_GROUPS, "muscle");
   renderCheckboxes(equipmentWrapEl, EQUIPMENT_OPTIONS, "equipment", true);
   hydrateFocusOptions(splitEl.value);
@@ -616,6 +618,7 @@ function startRestCountdown(seconds) {
 
     if (sessionState.restRemaining <= 0) {
       clearRestTimer();
+      notifyRestComplete();
       advanceAfterRest();
     }
   }, 1000);
@@ -1058,6 +1061,72 @@ function formatElapsedTime(totalSeconds) {
     return `${hours}:${minutes}:${seconds}`;
   }
   return `${minutes}:${seconds}`;
+}
+
+function primeAudioOnInteraction() {
+  const unlock = () => {
+    try {
+      const context = getAudioContext();
+      if (context && context.state === "suspended") {
+        context.resume();
+      }
+    } catch (_error) {
+      // Audio priming is best effort only.
+    }
+  };
+
+  window.addEventListener("pointerdown", unlock, { once: true });
+  window.addEventListener("keydown", unlock, { once: true });
+}
+
+function getAudioContext() {
+  if (audioContext) {
+    return audioContext;
+  }
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) {
+    return null;
+  }
+  audioContext = new AudioContextClass();
+  return audioContext;
+}
+
+function notifyRestComplete() {
+  if (navigator.vibrate) {
+    navigator.vibrate([120, 80, 120]);
+  }
+
+  const context = getAudioContext();
+  if (!context) {
+    return;
+  }
+  if (context.state === "suspended") {
+    context.resume().catch(() => {
+      // Resume can fail if browser blocks audio; fallback is vibration/status text.
+    });
+  }
+
+  const now = context.currentTime;
+  playBeep(context, now, 880, 0.09, 0.16);
+  playBeep(context, now + 0.16, 1180, 0.11, 0.18);
+}
+
+function playBeep(context, startAt, frequency, duration, volume) {
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+
+  oscillator.type = "sine";
+  oscillator.frequency.setValueAtTime(frequency, startAt);
+
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(volume, startAt + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+
+  oscillator.start(startAt);
+  oscillator.stop(startAt + duration + 0.02);
 }
 
 function setText(element, value) {
