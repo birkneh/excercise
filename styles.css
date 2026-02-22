@@ -10,16 +10,25 @@
   --line: rgba(176, 213, 239, 0.3);
   --accent: #6af2bf;
   --accent-soft: rgba(106, 242, 191, 0.2);
+  --app-vh: 1vh;
+  --app-height: calc(var(--app-vh) * 100);
 }
 
 * {
   box-sizing: border-box;
 }
 
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  height: 100%;
+}
+
 body {
   margin: 0;
   color: var(--text-main);
-  min-height: 100vh;
+  min-height: var(--app-height);
   font-family: "Space Grotesk", "Segoe UI", sans-serif;
   background: linear-gradient(140deg, var(--bg-navy), #061020 60%, var(--bg-steel));
 }
@@ -268,6 +277,9 @@ button:hover {
 .dashboard-overlay {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: var(--app-height);
+  min-height: 100vh;
   z-index: 60;
   padding: 0;
   display: block;
@@ -283,9 +295,10 @@ button:hover {
 }
 
 .dashboard-panel {
-  width: 100vw;
-  height: 100dvh;
-  max-height: none;
+  width: 100%;
+  height: var(--app-height);
+  min-height: var(--app-height);
+  max-height: var(--app-height);
   overflow: auto;
   border: none;
   border-radius: 0;
@@ -296,6 +309,8 @@ button:hover {
     radial-gradient(circle at 50% 100%, rgba(216, 236, 255, 0.16), transparent 38%);
   padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom)) 1rem;
   position: relative;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dashboard-panel::before {
@@ -405,6 +420,7 @@ button:hover {
 }
 
 .dashboard-progress-track {
+  min-height: 13px;
   height: 13px;
   border-radius: 999px;
   border: 1px solid rgba(172, 223, 255, 0.5);
@@ -623,6 +639,17 @@ button:hover {
     gap: 0.42rem;
   }
 
+  .dashboard-sticky-rail {
+    position: sticky;
+    top: calc(env(safe-area-inset-top) + 0.2rem);
+    z-index: 12;
+    padding: 0.2rem;
+    border-radius: 14px;
+    border: 1px solid rgba(140, 208, 255, 0.24);
+    background: linear-gradient(180deg, rgba(5, 15, 29, 0.96), rgba(8, 19, 35, 0.9));
+    box-shadow: 0 7px 20px rgba(4, 12, 24, 0.45);
+  }
+
   #dashboard-workout-timer,
   #dashboard-set-counter,
   #dashboard-exercise-timer {
@@ -768,15 +795,8 @@ button:hover {
   }
 
   .dashboard-sticky-rail {
-    position: sticky;
-    top: calc(env(safe-area-inset-top) + 0.2rem);
-    z-index: 8;
     margin-top: 0.52rem;
-    padding: 0.22rem;
-    border-radius: 14px;
-    border: 1px solid rgba(140, 208, 255, 0.23);
-    background: linear-gradient(180deg, rgba(5, 15, 29, 0.95), rgba(8, 19, 35, 0.88));
-    box-shadow: 0 6px 18px rgba(4, 12, 24, 0.45);
+    top: calc(env(safe-area-inset-top) + 0.16rem);
   }
 
   .dashboard-progress-wrap {
@@ -831,6 +851,7 @@ button:hover {
 @supports (-webkit-touch-callout: none) {
   .dashboard-panel {
     min-height: -webkit-fill-available;
+    height: -webkit-fill-available;
     overscroll-behavior: contain;
   }
 

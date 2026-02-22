@@ -102,6 +102,7 @@ let lastRenderedTrackIndex = -1;
 let lastTrackRenderKey = "";
 
 function init() {
+  syncViewportHeight();
   registerServiceWorker();
   renderCheckboxes(muscleWrapEl, MUSCLE_GROUPS, "muscle");
   renderCheckboxes(equipmentWrapEl, EQUIPMENT_OPTIONS, "equipment", true);
@@ -122,6 +123,11 @@ function init() {
   }
   startWorkoutBtn.addEventListener("click", startWorkout);
   wireDashboardControls();
+  window.addEventListener("resize", syncViewportHeight);
+  window.addEventListener("orientationchange", syncViewportHeight);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", syncViewportHeight);
+  }
 }
 
 function wireDashboardControls() {
@@ -1121,6 +1127,11 @@ function shortenExerciseName(name) {
     return name;
   }
   return `${words.slice(0, 2).join(" ")}...`;
+}
+
+function syncViewportHeight() {
+  const viewportUnit = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty("--app-vh", `${viewportUnit}px`);
 }
 
 function registerServiceWorker() {
