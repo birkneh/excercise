@@ -104,9 +104,21 @@
           <h2>Workout Dashboard</h2>
           <p id="dashboard-progress"></p>
         </div>
-        <p id="dashboard-workout-timer">Workout Timer: 00:00</p>
-        <p id="dashboard-set-counter">Set 1/1</p>
-        <p id="dashboard-exercise-timer">Exercise Timer: 00:00</p>
+        <div class="dashboard-mood-row">
+          <p id="dashboard-mood-pill">Ready to train</p>
+          <p id="dashboard-phase-pill">Idle</p>
+        </div>
+        <div class="dashboard-stats-grid">
+          <p id="dashboard-workout-timer">Workout Timer: 00:00</p>
+          <p id="dashboard-set-counter">Set 1/1</p>
+          <p id="dashboard-exercise-timer">Exercise Timer: 00:00</p>
+        </div>
+        <div class="dashboard-progress-wrap">
+          <div class="dashboard-progress-track">
+            <span id="dashboard-progress-fill"></span>
+          </div>
+          <p id="dashboard-progress-note">0% complete</p>
+        </div>
         <h3 id="dashboard-exercise">-</h3>
         <p id="dashboard-prescription"></p>
         <ul id="dashboard-cues" class="demo-cues"></ul>

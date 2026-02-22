@@ -63,7 +63,10 @@ const sessionSummaryEl = document.getElementById("session-summary");
 const sessionSummaryTextEl = document.getElementById("session-summary-text");
 const startWorkoutBtn = document.getElementById("start-workout-btn");
 const dashboardCardEl = document.getElementById("dashboard-card");
+const dashboardPanelEl = document.querySelector("#dashboard-card .dashboard-panel");
 const dashboardProgressEl = document.getElementById("dashboard-progress");
+const dashboardMoodPillEl = document.getElementById("dashboard-mood-pill");
+const dashboardPhasePillEl = document.getElementById("dashboard-phase-pill");
 const dashboardExerciseEl = document.getElementById("dashboard-exercise");
 const dashboardPrescriptionEl = document.getElementById("dashboard-prescription");
 const dashboardCuesEl = document.getElementById("dashboard-cues");
@@ -73,6 +76,8 @@ const dashboardWorkoutTimerEl = document.getElementById("dashboard-workout-timer
 const dashboardSetCounterEl = document.getElementById("dashboard-set-counter");
 const dashboardExerciseTimerEl = document.getElementById("dashboard-exercise-timer");
 const dashboardRestTimerEl = document.getElementById("dashboard-rest-timer");
+const dashboardProgressFillEl = document.getElementById("dashboard-progress-fill");
+const dashboardProgressNoteEl = document.getElementById("dashboard-progress-note");
 const dashboardNextBtn = document.getElementById("dashboard-next-btn");
 const dashboardStopBtn =
   document.getElementById("dashboard-stop-btn") || document.getElementById("dashboard-restart-btn");
@@ -735,8 +740,12 @@ function renderDashboard() {
     return;
   }
 
+  setDashboardVisualState();
+
   if (!activeWorkout.length) {
     setText(dashboardProgressEl, "");
+    setText(dashboardMoodPillEl, "Ready to train");
+    setText(dashboardPhasePillEl, "Idle");
     setText(dashboardSetCounterEl, "Set 1/1");
     setText(dashboardExerciseEl, "-");
     setText(dashboardPrescriptionEl, "");
@@ -744,6 +753,8 @@ function renderDashboard() {
     setText(dashboardWorkoutTimerEl, "Workout Timer: 00:00");
     setText(dashboardExerciseTimerEl, "Exercise Timer: 00:00");
     setText(dashboardRestTimerEl, "Rest Timer: --:--");
+    setText(dashboardProgressNoteEl, "0% complete");
+    setProgressFill(0);
     if (dashboardCuesEl) {
       dashboardCuesEl.innerHTML = "";
     }
@@ -762,11 +773,17 @@ function renderDashboard() {
   const exercise = activeWorkout[displayIndex];
   const displaySet = Math.min(Math.max(1, displayTarget ? displayTarget.setNumber : 1), exercise.sets);
   const targets = exercise.muscles.map(capitalize).join(", ");
+  const completionPercent = getCompletionPercent();
+  const tone = getDashboardTone(completionPercent);
 
   setText(dashboardProgressEl, `Exercise ${displayIndex + 1} of ${activeWorkout.length}`);
+  setText(dashboardMoodPillEl, tone.mood);
+  setText(dashboardPhasePillEl, tone.phase);
   setText(dashboardSetCounterEl, `Set ${displaySet}/${exercise.sets}`);
   setText(dashboardWorkoutTimerEl, `Workout Timer: ${formatElapsedTime(sessionState.elapsedSeconds)}`);
   setText(dashboardExerciseTimerEl, `Exercise Timer: ${formatElapsedTime(sessionState.exerciseElapsedSeconds)}`);
+  setText(dashboardProgressNoteEl, `${completionPercent}% complete`);
+  setProgressFill(completionPercent);
   setText(dashboardExerciseEl, exercise.name);
   setText(
     dashboardPrescriptionEl,
@@ -791,6 +808,10 @@ function renderDashboard() {
     const summary = buildSessionSummary("completed");
     setText(dashboardStatusEl, `Completed. ${summary}`);
     setText(dashboardRestTimerEl, "Rest Timer: --:--");
+    setText(dashboardMoodPillEl, "Session crushed");
+    setText(dashboardPhasePillEl, "Complete");
+    setProgressFill(100);
+    setText(dashboardProgressNoteEl, "100% complete");
     return;
   }
 
@@ -920,6 +941,58 @@ function setDisabled(element, disabled) {
   } else {
     element.removeAttribute("disabled");
   }
+}
+
+function setDashboardVisualState() {
+  if (dashboardPanelEl) {
+    dashboardPanelEl.classList.toggle("is-resting", sessionState.isResting && sessionState.started);
+    dashboardPanelEl.classList.toggle("is-complete", sessionState.completed);
+    dashboardPanelEl.classList.toggle(
+      "is-active",
+      sessionState.started && !sessionState.isResting && !sessionState.completed
+    );
+  }
+  if (dashboardNextBtn) {
+    dashboardNextBtn.classList.toggle(
+      "is-live",
+      sessionState.started && !sessionState.completed && !sessionState.isResting
+    );
+  }
+}
+
+function setProgressFill(percent) {
+  if (!dashboardProgressFillEl) {
+    return;
+  }
+  const safe = Math.max(0, Math.min(100, percent));
+  dashboardProgressFillEl.style.width = `${safe}%`;
+}
+
+function getCompletionPercent() {
+  const totalSets = countTotalPlannedSets();
+  if (!totalSets) {
+    return 0;
+  }
+  return Math.round((Math.min(sessionState.completedSets, totalSets) / totalSets) * 100);
+}
+
+function getDashboardTone(completionPercent) {
+  if (sessionState.completed) {
+    return { mood: "Session crushed", phase: "Complete" };
+  }
+  if (!sessionState.started) {
+    return { mood: "Ready to train", phase: "Idle" };
+  }
+  if (sessionState.isResting) {
+    return { mood: "Catch your breath", phase: "Rest" };
+  }
+  if (completionPercent >= 75) {
+    return { mood: "Strong finish", phase: "Push" };
+  }
+  if (completionPercent >= 40) {
+    return { mood: "Locked in", phase: "Flow" };
+  }
+  return { mood: "Great start", phase: "Warm" };
 }
 
 function countTotalPlannedSets() {
