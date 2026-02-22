@@ -61,6 +61,10 @@ const historyListEl = document.getElementById("history-list");
 const runnerStatusEl = document.getElementById("runner-status");
 const sessionSummaryEl = document.getElementById("session-summary");
 const sessionSummaryTextEl = document.getElementById("session-summary-text");
+const sessionSummaryExtraEl = document.getElementById("session-summary-extra");
+const sessionSummaryGarminNoteEl = document.getElementById("session-summary-garmin-note");
+const sessionSummaryGarminConnectEl = document.getElementById("session-summary-garmin-connect");
+const sessionSummaryGarminVenuEl = document.getElementById("session-summary-garmin-venu");
 const startWorkoutBtn = document.getElementById("start-workout-btn");
 const dashboardCardEl = document.getElementById("dashboard-card");
 const dashboardPanelEl = document.querySelector("#dashboard-card .dashboard-panel");
@@ -562,8 +566,10 @@ function completeSession() {
   const summary = buildSessionSummary("completed");
   runnerStatusEl.textContent = "Workout complete. Great work.";
   showSessionSummary(summary);
-  renderDashboard();
+  setDashboardVisible(false);
   updateWorkoutHighlights(true);
+  renderDashboard();
+  focusSummaryCard();
 }
 
 function restartSession(keepDashboard = false) {
@@ -638,6 +644,7 @@ function stopWorkout() {
   setDashboardVisible(false);
   renderDashboard();
   updateWorkoutHighlights();
+  focusSummaryCard();
 }
 
 function hideDashboard() {
@@ -827,7 +834,7 @@ function renderDashboard() {
 
   if (sessionState.completed) {
     const summary = buildSessionSummary("completed");
-    setText(dashboardStatusEl, `Completed. ${summary}`);
+    setText(dashboardStatusEl, `Completed. ${summary.text}`);
     setText(dashboardRestTimerEl, "Rest Timer: --:--");
     setText(dashboardMoodPillEl, "Session crushed");
     setText(dashboardPhasePillEl, "Complete");
@@ -1098,20 +1105,56 @@ function buildSessionSummary(outcome) {
   const totalExercises = activeWorkout.length;
   const duration = formatElapsedTime(sessionState.elapsedSeconds);
   const outcomeLabel = outcome === "completed" ? "Completed" : "Stopped";
-  return `${outcomeLabel}: ${completedExercises}/${totalExercises} exercises, ${completedSets}/${totalSets} sets in ${duration}.`;
+  const completionPercent = totalSets ? Math.round((completedSets / totalSets) * 100) : 0;
+  const nextSuggestion = activeWorkout
+    .slice(0, Math.max(0, completedExercises))
+    .map((exercise) => exercise.name)
+    .slice(0, 4)
+    .join(", ");
+
+  return {
+    text: `${outcomeLabel}: ${completedExercises}/${totalExercises} exercises, ${completedSets}/${totalSets} sets in ${duration}.`,
+    extra:
+      outcome === "completed"
+        ? `Completion: ${completionPercent}%. Exercises finished: ${nextSuggestion || "All planned work completed."}`
+        : `Progress saved at ${completionPercent}%. Resume anytime from the generated plan.`,
+    garminNote:
+      "Garmin Venu 3 link is manual. Direct automatic sync needs a backend plus Garmin Health API approval."
+  };
 }
 
-function showSessionSummary(summaryText) {
+function showSessionSummary(summary) {
   if (sessionSummaryEl) {
     sessionSummaryEl.hidden = false;
   }
-  setText(sessionSummaryTextEl, summaryText);
+  if (!summary) {
+    return;
+  }
+  setText(sessionSummaryTextEl, summary.text || "");
+  setText(sessionSummaryExtraEl, summary.extra || "");
+  setText(sessionSummaryGarminNoteEl, summary.garminNote || "");
+  if (sessionSummaryGarminConnectEl) {
+    sessionSummaryGarminConnectEl.href = "https://connect.garmin.com/modern/";
+  }
+  if (sessionSummaryGarminVenuEl) {
+    sessionSummaryGarminVenuEl.href = "https://www.garmin.com/en-US/p/873008#manuals";
+  }
 }
 
 function hideSessionSummary() {
   if (sessionSummaryEl) {
     sessionSummaryEl.hidden = true;
   }
+  setText(sessionSummaryTextEl, "No session summary yet.");
+  setText(sessionSummaryExtraEl, "");
+  setText(sessionSummaryGarminNoteEl, "");
+}
+
+function focusSummaryCard() {
+  if (!sessionSummaryEl || sessionSummaryEl.hidden) {
+    return;
+  }
+  sessionSummaryEl.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function capitalize(value) {

@@ -8,9 +8,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="ForgeFit" />
     <title>ForgeFit Strength Planner</title>
-    <link rel="manifest" href="manifest.webmanifest?v=20260222d" />
+    <link rel="manifest" href="manifest.webmanifest?v=20260222e" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260222d" />
+    <link rel="stylesheet" href="styles.css?v=20260222e" />
   </head>
   <body>
     <div class="bg-layer"></div>
@@ -88,6 +88,26 @@
         <div class="session-summary" id="session-summary" hidden>
           <h3>Session Summary</h3>
           <p id="session-summary-text">No session summary yet.</p>
+          <p id="session-summary-extra"></p>
+          <p id="session-summary-garmin-note"></p>
+          <div class="session-summary-links">
+            <a
+              id="session-summary-garmin-connect"
+              href="https://connect.garmin.com/modern/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open Garmin Connect
+            </a>
+            <a
+              id="session-summary-garmin-venu"
+              href="https://www.garmin.com/en-US/p/873008#manuals"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Venu 3 Guide
+            </a>
+          </div>
         </div>
         <ul id="workout-list"></ul>
       </section>
@@ -143,7 +163,7 @@
       </div>
     </section>
 
-    <script src="exercises.js?v=20260222d"></script>
-    <script src="app.js?v=20260222d"></script>
+    <script src="exercises.js?v=20260222e"></script>
+    <script src="app.js?v=20260222e"></script>
   </body>
 </html>

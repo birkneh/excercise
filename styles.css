@@ -246,6 +246,40 @@ button:hover {
   color: #dcf6ff;
 }
 
+#session-summary-extra {
+  margin: 0.35rem 0 0;
+  color: #cce8f9;
+  font-size: 0.9rem;
+}
+
+#session-summary-garmin-note {
+  margin: 0.35rem 0 0;
+  color: #b9def3;
+  font-size: 0.85rem;
+}
+
+.session-summary-links {
+  margin-top: 0.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.session-summary-links a {
+  color: #c9f9e6;
+  text-decoration: none;
+  border: 1px solid rgba(147, 220, 255, 0.42);
+  background: rgba(7, 22, 39, 0.68);
+  border-radius: 999px;
+  padding: 0.34rem 0.7rem;
+  font-size: 0.82rem;
+}
+
+.session-summary-links a:hover {
+  border-color: rgba(147, 220, 255, 0.76);
+  color: #e5fff3;
+}
+
 .runner-controls {
   margin-top: 0.6rem;
   display: flex;
