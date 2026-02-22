@@ -384,14 +384,14 @@ button:hover {
 }
 
 #dashboard-mood-pill {
-  background: rgba(153, 221, 255, 0.2);
-  border: 1px solid rgba(153, 221, 255, 0.4);
+  background: rgba(153, 221, 255, 0.24);
+  border: 1px solid rgba(153, 221, 255, 0.5);
   color: #e4f4ff;
 }
 
 #dashboard-phase-pill {
-  background: rgba(166, 255, 220, 0.2);
-  border: 1px solid rgba(166, 255, 220, 0.38);
+  background: rgba(166, 255, 220, 0.24);
+  border: 1px solid rgba(166, 255, 220, 0.45);
   color: #d8ffe6;
 }
 
@@ -420,10 +420,10 @@ button:hover {
 }
 
 .dashboard-progress-track {
-  min-height: 13px;
-  height: 13px;
+  min-height: 14px;
+  height: 14px;
   border-radius: 999px;
-  border: 1px solid rgba(172, 223, 255, 0.5);
+  border: 1px solid rgba(172, 223, 255, 0.65);
   background: rgba(9, 19, 37, 0.88);
   overflow: hidden;
 }
@@ -635,7 +635,7 @@ button:hover {
   }
 
   .dashboard-stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.42rem;
   }
 
@@ -653,8 +653,8 @@ button:hover {
   #dashboard-workout-timer,
   #dashboard-set-counter,
   #dashboard-exercise-timer {
-    font-size: 0.98rem;
-    min-height: 54px;
+    font-size: 1rem;
+    min-height: 52px;
     display: flex;
     align-items: center;
   }
@@ -842,9 +842,9 @@ button:hover {
   }
 
   .runner-controls .runner-btn {
-    flex: 1 1 100%;
+    flex: 0 0 auto;
     margin-top: 0;
-    min-width: 0;
+    min-width: 110px;
   }
 }
 
