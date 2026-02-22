@@ -45,6 +45,8 @@ const DIFFICULTY_PRESETS = {
   advanced: { sets: 5, reps: "5-10", rest: 60, compounds: 0.72 }
 };
 
+const SESSION_TRACKING_KEY = "forgefit-session-history";
+
 const durationEl = document.getElementById("duration");
 const durationValueEl = document.getElementById("duration-value");
 const splitEl = document.getElementById("split");
@@ -360,13 +362,13 @@ function persistWorkout(workout) {
 }
 
 function renderHistory() {
-  const history = JSON.parse(localStorage.getItem("forgefit-history") || "[]");
+  const history = getStoredHistory(SESSION_TRACKING_KEY);
   historyListEl.innerHTML = "";
 
   if (!history.length) {
     const li = document.createElement("li");
     li.className = "history-item";
-    li.innerHTML = "<h4>No workouts yet</h4><p>Generate a workout to start tracking sessions.</p>";
+    li.innerHTML = "<h4>No tracked sessions yet</h4><p>Finish or stop a workout to save detailed history.</p>";
     historyListEl.appendChild(li);
     return;
   }
@@ -375,17 +377,117 @@ function renderHistory() {
     const li = document.createElement("li");
     li.className = "history-item";
 
-    const date = new Date(entry.generatedAt).toLocaleString();
-    const title = document.createElement("h4");
-    title.textContent = `${capitalize(entry.focus)} | ${entry.duration} min | ${capitalize(entry.difficulty)}`;
+    const details = document.createElement("details");
+    details.className = "history-session";
 
-    const details = document.createElement("p");
-    details.textContent = `${date} | ${entry.exercises.length} exercises`;
+    const summary = document.createElement("summary");
+    summary.className = "history-session-summary";
 
-    li.appendChild(title);
+    const dateText = entry.endedAt ? new Date(entry.endedAt).toLocaleString() : "Unknown date";
+    const outcomeLabel = entry.outcome === "completed" ? "Completed" : "Stopped";
+
+    const heading = document.createElement("span");
+    heading.className = "history-session-heading";
+    heading.textContent = `${outcomeLabel} | ${dateText}`;
+
+    const totals = document.createElement("span");
+    totals.className = "history-session-totals";
+    totals.textContent = `${entry.completedSets || 0}/${entry.totalSets || 0} sets`;
+
+    summary.appendChild(heading);
+    summary.appendChild(totals);
+
+    const body = document.createElement("div");
+    body.className = "history-session-body";
+
+    const sessionMeta = document.createElement("p");
+    sessionMeta.className = "history-session-meta";
+    const duration = formatElapsedTime(Number(entry.durationSeconds || 0));
+    const totalExercises = Number(entry.totalExercises || (entry.exercises ? entry.exercises.length : 0));
+    sessionMeta.textContent = `Duration ${duration} | Exercises ${entry.completedExercises || 0}/${totalExercises} | Sets ${entry.completedSets || 0}/${entry.totalSets || 0}`;
+    body.appendChild(sessionMeta);
+
+    const exerciseList = document.createElement("ul");
+    exerciseList.className = "history-exercise-list";
+    (entry.exercises || []).forEach((exercise) => {
+      const exerciseItem = document.createElement("li");
+      exerciseItem.className = "history-exercise-item";
+
+      const exerciseTitle = document.createElement("h5");
+      exerciseTitle.textContent = exercise.name || "Exercise";
+
+      const exerciseMeta = document.createElement("p");
+      const equipment = exercise.equipment
+        ? capitalize(String(exercise.equipment).replace("-", " "))
+        : "Unknown equipment";
+      const muscles = Array.isArray(exercise.muscles) && exercise.muscles.length
+        ? exercise.muscles.map(capitalize).join(", ")
+        : "N/A";
+      exerciseMeta.textContent = `${exercise.completedSets || 0}/${exercise.plannedSets || 0} sets | ${exercise.reps || "-"} reps | ${equipment} | ${muscles}`;
+
+      exerciseItem.appendChild(exerciseTitle);
+      exerciseItem.appendChild(exerciseMeta);
+      exerciseList.appendChild(exerciseItem);
+    });
+    body.appendChild(exerciseList);
+
+    details.appendChild(summary);
+    details.appendChild(body);
     li.appendChild(details);
     historyListEl.appendChild(li);
   });
+}
+
+function getStoredHistory(key) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+function persistSessionRecord(outcome) {
+  if (!activeWorkout.length) {
+    return;
+  }
+  if (sessionState.elapsedSeconds <= 0 && sessionState.completedSets <= 0) {
+    return;
+  }
+
+  const totalSets = countTotalPlannedSets();
+  const completedSets = Math.min(sessionState.completedSets, totalSets);
+  const completedExercises = countCompletedExercises();
+  let setsRemaining = completedSets;
+
+  const exerciseBreakdown = activeWorkout.map((exercise) => {
+    const completedForExercise = Math.min(exercise.sets, setsRemaining);
+    setsRemaining = Math.max(0, setsRemaining - exercise.sets);
+    return {
+      name: exercise.name,
+      equipment: exercise.equipment,
+      muscles: exercise.muscles,
+      reps: exercise.reps,
+      plannedSets: exercise.sets,
+      completedSets: completedForExercise
+    };
+  });
+
+  const record = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    endedAt: new Date().toISOString(),
+    outcome,
+    durationSeconds: Math.max(0, Math.floor(sessionState.elapsedSeconds)),
+    completedExercises,
+    totalExercises: activeWorkout.length,
+    completedSets,
+    totalSets,
+    exercises: exerciseBreakdown
+  };
+
+  const history = getStoredHistory(SESSION_TRACKING_KEY);
+  history.unshift(record);
+  localStorage.setItem(SESSION_TRACKING_KEY, JSON.stringify(history.slice(0, 40)));
 }
 
 function resetSessionRunner(workout) {
@@ -564,6 +666,8 @@ function completeSession() {
   startWorkoutBtn.disabled = false;
   startWorkoutBtn.textContent = "Start Workout Dashboard";
   const summary = buildSessionSummary("completed");
+  persistSessionRecord("completed");
+  renderHistory();
   runnerStatusEl.textContent = "Workout complete. Great work.";
   showSessionSummary(summary);
   setDashboardVisible(false);
@@ -619,6 +723,8 @@ function stopWorkout() {
   lastRenderedTrackIndex = -1;
   lastTrackRenderKey = "";
   const summary = buildSessionSummary("stopped");
+  persistSessionRecord("stopped");
+  renderHistory();
   sessionState = {
     started: false,
     completed: false,

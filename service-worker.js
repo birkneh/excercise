@@ -1,17 +1,17 @@
-const CACHE_NAME = "forgefit-static-v4";
+const CACHE_NAME = "forgefit-static-v5";
 
 const basePath = self.location.pathname.replace(/service-worker\.js$/, "");
 const APP_SHELL = [
   `${basePath}`,
   `${basePath}index.html`,
   `${basePath}styles.css`,
-  `${basePath}styles.css?v=20260222e`,
+  `${basePath}styles.css?v=20260222f`,
   `${basePath}app.js`,
-  `${basePath}app.js?v=20260222e`,
+  `${basePath}app.js?v=20260222f`,
   `${basePath}exercises.js`,
-  `${basePath}exercises.js?v=20260222e`,
+  `${basePath}exercises.js?v=20260222f`,
   `${basePath}manifest.webmanifest`,
-  `${basePath}manifest.webmanifest?v=20260222e`,
+  `${basePath}manifest.webmanifest?v=20260222f`,
   `${basePath}icon-192.png`,
   `${basePath}icon-512.png`,
   `${basePath}apple-touch-icon.png`

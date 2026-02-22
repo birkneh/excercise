@@ -771,6 +771,71 @@ button:hover {
   font-size: 0.82rem;
 }
 
+.history-session {
+  margin: 0;
+}
+
+.history-session-summary {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.55rem;
+  align-items: center;
+  cursor: pointer;
+}
+
+.history-session-summary::-webkit-details-marker {
+  display: none;
+}
+
+.history-session-heading {
+  font-size: 0.9rem;
+  color: #dff4ff;
+}
+
+.history-session-totals {
+  font-size: 0.83rem;
+  color: #9cf6d4;
+}
+
+.history-session-body {
+  margin-top: 0.55rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.history-session-meta {
+  color: #bad8ea;
+  font-size: 0.82rem;
+}
+
+.history-exercise-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.history-exercise-item {
+  border: 1px solid rgba(171, 218, 246, 0.3);
+  border-radius: 10px;
+  background: rgba(6, 16, 30, 0.55);
+  padding: 0.48rem 0.55rem;
+}
+
+.history-exercise-item h5 {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #e3f5ff;
+}
+
+.history-exercise-item p {
+  margin-top: 0.2rem;
+  color: #b7d3e6;
+  font-size: 0.8rem;
+}
+
 .workout-item.current {
   border-color: rgba(106, 242, 191, 0.85);
   box-shadow: 0 0 0 1px rgba(106, 242, 191, 0.24);
@@ -879,6 +944,12 @@ button:hover {
     flex: 0 0 auto;
     margin-top: 0;
     min-width: 110px;
+  }
+
+  .history-session-summary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
   }
 }
 
