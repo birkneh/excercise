@@ -1,4 +1,4 @@
-const CACHE_NAME = "forgefit-static-v1";
+const CACHE_NAME = "forgefit-static-v2";
 
 const basePath = self.location.pathname.replace(/service-worker\.js$/, "");
 const APP_SHELL = [
@@ -40,28 +40,51 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request).catch(() => caches.match(`${basePath}index.html`))
-    );
+  const isCoreAsset =
+    request.mode === "navigate" ||
+    request.destination === "document" ||
+    request.destination === "script" ||
+    request.destination === "style";
+
+  if (isCoreAsset) {
+    event.respondWith(networkFirst(request));
     return;
   }
 
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) {
-        return cached;
-      }
-      return fetch(request)
-        .then((response) => {
-          if (!response || response.status !== 200 || response.type !== "basic") {
-            return response;
-          }
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => caches.match(`${basePath}index.html`));
-    })
-  );
+  event.respondWith(cacheFirst(request));
 });
+
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response && response.status === 200 && response.type === "basic") {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (_error) {
+    const cached = await caches.match(request);
+    if (cached) {
+      return cached;
+    }
+    if (request.mode === "navigate" || request.destination === "document") {
+      return caches.match(`${basePath}index.html`);
+    }
+    throw _error;
+  }
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) {
+    return cached;
+  }
+
+  const response = await fetch(request);
+  if (!response || response.status !== 200 || response.type !== "basic") {
+    return response;
+  }
+  const cache = await caches.open(CACHE_NAME);
+  cache.put(request, response.clone());
+  return response;
+}

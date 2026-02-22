@@ -1139,9 +1139,21 @@ function registerServiceWorker() {
     return;
   }
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch(() => {
-      // Intentionally silent. App works without service worker if registration fails.
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) {
+        return;
+      }
+      refreshing = true;
+      window.location.reload();
     });
+
+    navigator.serviceWorker
+      .register("./service-worker.js")
+      .then((registration) => registration.update())
+      .catch(() => {
+        // Intentionally silent. App works without service worker if registration fails.
+      });
   });
 }
 
