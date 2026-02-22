@@ -59,6 +59,8 @@ const workoutMetaEl = document.getElementById("workout-meta");
 const workoutListEl = document.getElementById("workout-list");
 const historyListEl = document.getElementById("history-list");
 const runnerStatusEl = document.getElementById("runner-status");
+const sessionSummaryEl = document.getElementById("session-summary");
+const sessionSummaryTextEl = document.getElementById("session-summary-text");
 const startWorkoutBtn = document.getElementById("start-workout-btn");
 const dashboardCardEl = document.getElementById("dashboard-card");
 const dashboardProgressEl = document.getElementById("dashboard-progress");
@@ -83,6 +85,7 @@ let sessionState = {
   isResting: false,
   currentIndex: 0,
   currentSet: 1,
+  completedSets: 0,
   restRemaining: 0,
   elapsedSeconds: 0,
   exerciseElapsedSeconds: 0
@@ -377,6 +380,7 @@ function resetSessionRunner(workout) {
     isResting: false,
     currentIndex: 0,
     currentSet: 1,
+    completedSets: 0,
     restRemaining: 0,
     elapsedSeconds: 0,
     exerciseElapsedSeconds: 0
@@ -395,6 +399,7 @@ function resetSessionRunner(workout) {
     setDisabled(dashboardStopBtn, !workout.length);
   }
   setText(dashboardRestTimerEl, "Rest Timer: --:--");
+  hideSessionSummary();
   setDashboardVisible(false);
   renderDashboard();
   updateWorkoutHighlights();
@@ -457,6 +462,7 @@ function handleNextAction() {
 
   const isFinalExercise = sessionState.currentIndex >= activeWorkout.length - 1;
   const isFinalSet = sessionState.currentSet >= currentExercise.sets;
+  sessionState.completedSets += 1;
   if (isFinalExercise && isFinalSet) {
     completeSession();
     return;
@@ -537,7 +543,9 @@ function completeSession() {
   }
   startWorkoutBtn.disabled = false;
   startWorkoutBtn.textContent = "Start Workout Dashboard";
+  const summary = buildSessionSummary("completed");
   runnerStatusEl.textContent = "Workout complete. Great work.";
+  showSessionSummary(summary);
   renderDashboard();
   updateWorkoutHighlights(true);
 }
@@ -555,6 +563,7 @@ function restartSession(keepDashboard = false) {
     isResting: false,
     currentIndex: 0,
     currentSet: 1,
+    completedSets: 0,
     restRemaining: 0,
     elapsedSeconds: 0,
     exerciseElapsedSeconds: 0
@@ -570,6 +579,7 @@ function restartSession(keepDashboard = false) {
   }
   runnerStatusEl.textContent = `Ready: ${activeWorkout.length} exercises. Tap Start Workout Dashboard.`;
   setText(dashboardRestTimerEl, "Rest Timer: --:--");
+  hideSessionSummary();
   setDashboardVisible(keepDashboard);
   renderDashboard();
   updateWorkoutHighlights();
@@ -582,12 +592,14 @@ function stopWorkout() {
 
   clearRestTimer();
   clearWorkoutTimer();
+  const summary = buildSessionSummary("stopped");
   sessionState = {
     started: false,
     completed: false,
     isResting: false,
     currentIndex: 0,
     currentSet: 1,
+    completedSets: 0,
     restRemaining: 0,
     elapsedSeconds: 0,
     exerciseElapsedSeconds: 0
@@ -602,6 +614,7 @@ function stopWorkout() {
     setDisabled(dashboardStopBtn, false);
   }
   runnerStatusEl.textContent = "Workout stopped. Tap Start Workout Dashboard to begin again.";
+  showSessionSummary(summary);
   setDashboardVisible(false);
   renderDashboard();
   updateWorkoutHighlights();
@@ -775,7 +788,8 @@ function renderDashboard() {
   }
 
   if (sessionState.completed) {
-    setText(dashboardStatusEl, "Workout complete. Tap Start to run another session.");
+    const summary = buildSessionSummary("completed");
+    setText(dashboardStatusEl, `Completed. ${summary}`);
     setText(dashboardRestTimerEl, "Rest Timer: --:--");
     return;
   }
@@ -905,6 +919,48 @@ function setDisabled(element, disabled) {
     element.setAttribute("disabled", "");
   } else {
     element.removeAttribute("disabled");
+  }
+}
+
+function countTotalPlannedSets() {
+  return activeWorkout.reduce((total, exercise) => total + exercise.sets, 0);
+}
+
+function countCompletedExercises() {
+  const fullExercises = activeWorkout.filter(
+    (_, exerciseIndex) => sessionState.completedSets >= countSetsUpToExercise(exerciseIndex + 1)
+  ).length;
+  return Math.min(fullExercises, activeWorkout.length);
+}
+
+function countSetsUpToExercise(exclusiveEndIndex) {
+  let total = 0;
+  for (let index = 0; index < exclusiveEndIndex; index += 1) {
+    total += activeWorkout[index].sets;
+  }
+  return total;
+}
+
+function buildSessionSummary(outcome) {
+  const completedSets = Math.min(sessionState.completedSets, countTotalPlannedSets());
+  const totalSets = countTotalPlannedSets();
+  const completedExercises = countCompletedExercises();
+  const totalExercises = activeWorkout.length;
+  const duration = formatElapsedTime(sessionState.elapsedSeconds);
+  const outcomeLabel = outcome === "completed" ? "Completed" : "Stopped";
+  return `${outcomeLabel}: ${completedExercises}/${totalExercises} exercises, ${completedSets}/${totalSets} sets in ${duration}.`;
+}
+
+function showSessionSummary(summaryText) {
+  if (sessionSummaryEl) {
+    sessionSummaryEl.hidden = false;
+  }
+  setText(sessionSummaryTextEl, summaryText);
+}
+
+function hideSessionSummary() {
+  if (sessionSummaryEl) {
+    sessionSummaryEl.hidden = true;
   }
 }
 

@@ -18,6 +18,7 @@ A static strength-training planner for full gym environments. The app generates 
   - Rest timer between exercises
   - `Next` button moves through sets/exercises and can skip rest while resting
   - `Stop` button discontinues workout and resets the active session
+  - On `Stop` and completion, a summary shows exercises/sets completed and total time
 
 The app runs fully in-browser with no backend and stores recent workout history in `localStorage`.
 

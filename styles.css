@@ -218,6 +218,25 @@ button:hover {
   font-size: 0.83rem;
 }
 
+.session-summary {
+  margin-bottom: 0.9rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(11, 24, 42, 0.9);
+}
+
+.session-summary h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+#session-summary-text {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  color: #dcf6ff;
+}
+
 .runner-controls {
   margin-top: 0.6rem;
   display: flex;
@@ -288,25 +307,28 @@ button:hover {
 #dashboard-rest-timer {
   margin: 0.2rem 0 0;
   color: var(--text-muted);
-  font-size: 0.84rem;
+  font-size: 1.02rem;
 }
 
 #dashboard-exercise {
-  margin-top: 0.55rem;
-  font-size: 1.05rem;
+  margin-top: 0.6rem;
+  font-size: 1.45rem;
 }
 
 #dashboard-workout-timer {
   color: #aef8d9;
   letter-spacing: 0.05em;
+  font-size: 1.15rem;
 }
 
 #dashboard-set-counter {
   color: #dff4ff;
+  font-size: 1.1rem;
 }
 
 #dashboard-exercise-timer {
   color: #d3ffe9;
+  font-size: 1.1rem;
 }
 
 #dashboard-status {
@@ -315,6 +337,7 @@ button:hover {
 
 #dashboard-rest-timer {
   color: #d7ffeb;
+  font-size: 1.08rem;
 }
 
 #workout-list,
