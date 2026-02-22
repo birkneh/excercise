@@ -308,6 +308,20 @@ button:hover {
   opacity: 0.45;
 }
 
+.dashboard-panel::after {
+  content: "";
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  left: -70px;
+  bottom: -70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(138, 255, 214, 0.14), transparent 68%);
+  filter: blur(4px);
+  pointer-events: none;
+  animation: driftGlow 7s ease-in-out infinite;
+}
+
 .dashboard-panel > * {
   position: relative;
 }
@@ -331,6 +345,12 @@ button:hover {
   gap: 0.8rem;
   flex-wrap: wrap;
   margin-bottom: 0.25rem;
+}
+
+.dashboard-head h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 4.8vw, 1.9rem);
+  letter-spacing: 0.05em;
 }
 
 .dashboard-mood-row {
@@ -367,8 +387,17 @@ button:hover {
   gap: 0.48rem;
 }
 
+.dashboard-stats-grid p {
+  margin: 0;
+}
+
 .dashboard-progress-wrap {
   margin-top: 0.68rem;
+  padding: 0.5rem 0.58rem 0.42rem;
+  border: 1px solid rgba(158, 209, 247, 0.42);
+  border-radius: 14px;
+  background: rgba(6, 16, 31, 0.62);
+  backdrop-filter: blur(4px);
 }
 
 .dashboard-progress-track {
@@ -395,6 +424,85 @@ button:hover {
   color: #cce9ff;
 }
 
+.dashboard-exercise-track {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.48rem;
+  overflow-x: auto;
+  padding: 0.25rem 0.08rem 0.4rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(150, 219, 255, 0.75) rgba(9, 21, 38, 0.42);
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dashboard-exercise-track::-webkit-scrollbar {
+  height: 7px;
+}
+
+.dashboard-exercise-track::-webkit-scrollbar-track {
+  background: rgba(9, 21, 38, 0.45);
+  border-radius: 999px;
+}
+
+.dashboard-exercise-track::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, rgba(146, 216, 255, 0.95), rgba(132, 252, 206, 0.95));
+  border-radius: 999px;
+}
+
+.exercise-chip {
+  min-width: 112px;
+  padding: 0.38rem 0.52rem;
+  border-radius: 12px;
+  border: 1px solid rgba(170, 224, 255, 0.34);
+  background: linear-gradient(160deg, rgba(13, 31, 53, 0.9), rgba(9, 20, 37, 0.95));
+  color: #ecf8ff;
+  display: grid;
+  gap: 0.1rem;
+  justify-items: start;
+  line-height: 1.1;
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.exercise-chip-index {
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  font-size: 0.84rem;
+  letter-spacing: 0.08em;
+  color: #a8d6f7;
+}
+
+.exercise-chip-name {
+  font-size: 0.81rem;
+  color: #d7efff;
+}
+
+.exercise-chip.is-upcoming {
+  opacity: 0.85;
+}
+
+.exercise-chip.is-current {
+  transform: translateY(-2px) scale(1.03);
+  border-color: rgba(127, 255, 211, 0.92);
+  box-shadow: 0 7px 16px rgba(96, 233, 190, 0.25);
+  background: linear-gradient(160deg, rgba(22, 59, 76, 0.92), rgba(16, 40, 59, 0.95));
+}
+
+.exercise-chip.is-current .exercise-chip-index {
+  color: #c6ffea;
+}
+
+.exercise-chip.is-complete {
+  border-color: rgba(255, 223, 145, 0.85);
+  background: linear-gradient(160deg, rgba(72, 61, 26, 0.92), rgba(42, 34, 16, 0.95));
+}
+
+.exercise-chip.is-complete .exercise-chip-index::before {
+  content: "✓ ";
+  color: #ffe08c;
+}
+
 #dashboard-progress,
 #dashboard-workout-timer,
 #dashboard-set-counter,
@@ -409,7 +517,10 @@ button:hover {
 
 #dashboard-exercise {
   margin-top: 0.6rem;
-  font-size: 1.45rem;
+  font-size: clamp(1.55rem, 5vw, 2rem);
+  line-height: 1.08;
+  color: #edfbff;
+  text-shadow: 0 3px 9px rgba(0, 0, 0, 0.25);
 }
 
 #dashboard-workout-timer {
@@ -453,8 +564,28 @@ button:hover {
   font-size: 1.08rem;
 }
 
+#dashboard-progress {
+  font-size: 1.08rem;
+  color: #e6f5ff;
+}
+
+#dashboard-prescription {
+  background: rgba(12, 27, 46, 0.72);
+  border: 1px solid rgba(170, 224, 255, 0.28);
+  border-radius: 12px;
+  padding: 0.55rem 0.62rem;
+}
+
 #dashboard-next-btn.is-live {
   animation: pulseNext 1.2s ease-in-out infinite;
+}
+
+#dashboard-next-btn,
+#dashboard-stop-btn,
+#dashboard-hide-btn {
+  min-height: 46px;
+  min-width: 118px;
+  font-size: 0.95rem;
 }
 
 @keyframes pulseNext {
@@ -466,6 +597,18 @@ button:hover {
   }
   100% {
     box-shadow: 0 0 0 0 rgba(122, 252, 202, 0);
+  }
+}
+
+@keyframes driftGlow {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-10px);
+    opacity: 1;
   }
 }
 
@@ -554,5 +697,81 @@ button:hover {
   .hero,
   .card {
     border-radius: 14px;
+  }
+
+  .dashboard-panel {
+    padding:
+      max(0.88rem, env(safe-area-inset-top))
+      0.72rem
+      max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem))
+      0.72rem;
+  }
+
+  .dashboard-progress-wrap {
+    position: sticky;
+    top: calc(env(safe-area-inset-top) + 0.2rem);
+    z-index: 8;
+    margin-top: 0.52rem;
+    box-shadow: 0 6px 18px rgba(4, 12, 24, 0.45);
+  }
+
+  .dashboard-exercise-track {
+    position: sticky;
+    top: calc(env(safe-area-inset-top) + 4.1rem);
+    z-index: 7;
+    margin-top: 0.38rem;
+    padding-bottom: 0.48rem;
+    background: linear-gradient(180deg, rgba(7, 17, 31, 0.95), rgba(7, 17, 31, 0.55));
+    border-radius: 12px;
+    border: 1px solid rgba(148, 213, 255, 0.25);
+    padding-left: 0.3rem;
+    padding-right: 0.3rem;
+  }
+
+  .exercise-chip {
+    min-width: 104px;
+    padding: 0.36rem 0.48rem;
+  }
+
+  .exercise-chip-name {
+    font-size: 0.77rem;
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #dashboard-workout-timer,
+  #dashboard-set-counter,
+  #dashboard-exercise-timer {
+    font-size: 1rem;
+  }
+
+  #dashboard-exercise {
+    margin-top: 0.8rem;
+    font-size: 1.62rem;
+  }
+
+  #dashboard-status,
+  #dashboard-prescription {
+    font-size: 0.98rem;
+  }
+
+  .runner-controls {
+    position: sticky;
+    bottom: calc(env(safe-area-inset-bottom) + 0.28rem);
+    z-index: 9;
+    padding: 0.45rem;
+    margin-top: 0.75rem;
+    border: 1px solid rgba(149, 213, 255, 0.34);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(6, 17, 30, 0.96), rgba(10, 25, 42, 0.92));
+    backdrop-filter: blur(6px);
+  }
+
+  .runner-controls .runner-btn {
+    flex: 1 1 calc(50% - 0.3rem);
+    margin-top: 0;
+    min-width: 0;
   }
 }

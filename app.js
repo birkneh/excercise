@@ -78,6 +78,7 @@ const dashboardExerciseTimerEl = document.getElementById("dashboard-exercise-tim
 const dashboardRestTimerEl = document.getElementById("dashboard-rest-timer");
 const dashboardProgressFillEl = document.getElementById("dashboard-progress-fill");
 const dashboardProgressNoteEl = document.getElementById("dashboard-progress-note");
+const dashboardExerciseTrackEl = document.getElementById("dashboard-exercise-track");
 const dashboardNextBtn = document.getElementById("dashboard-next-btn");
 const dashboardStopBtn =
   document.getElementById("dashboard-stop-btn") || document.getElementById("dashboard-restart-btn");
@@ -97,6 +98,7 @@ let sessionState = {
 };
 let restIntervalId = null;
 let workoutIntervalId = null;
+let lastRenderedTrackIndex = -1;
 
 function init() {
   registerServiceWorker();
@@ -379,6 +381,7 @@ function resetSessionRunner(workout) {
   clearRestTimer();
   clearWorkoutTimer();
   activeWorkout = workout;
+  lastRenderedTrackIndex = -1;
   sessionState = {
     started: false,
     completed: false,
@@ -562,6 +565,7 @@ function restartSession(keepDashboard = false) {
 
   clearRestTimer();
   clearWorkoutTimer();
+  lastRenderedTrackIndex = -1;
   sessionState = {
     started: false,
     completed: false,
@@ -597,6 +601,7 @@ function stopWorkout() {
 
   clearRestTimer();
   clearWorkoutTimer();
+  lastRenderedTrackIndex = -1;
   const summary = buildSessionSummary("stopped");
   sessionState = {
     started: false,
@@ -755,6 +760,7 @@ function renderDashboard() {
     setText(dashboardRestTimerEl, "Rest Timer: --:--");
     setText(dashboardProgressNoteEl, "0% complete");
     setProgressFill(0);
+    renderExerciseTrack(-1);
     if (dashboardCuesEl) {
       dashboardCuesEl.innerHTML = "";
     }
@@ -774,7 +780,11 @@ function renderDashboard() {
   const displaySet = Math.min(Math.max(1, displayTarget ? displayTarget.setNumber : 1), exercise.sets);
   const targets = exercise.muscles.map(capitalize).join(", ");
   const completionPercent = getCompletionPercent();
+  const visibleCompletionPercent =
+    sessionState.started && !sessionState.completed ? Math.max(4, completionPercent) : completionPercent;
   const tone = getDashboardTone(completionPercent);
+  const completedSets = Math.min(sessionState.completedSets, countTotalPlannedSets());
+  const totalSets = countTotalPlannedSets();
 
   setText(dashboardProgressEl, `Exercise ${displayIndex + 1} of ${activeWorkout.length}`);
   setText(dashboardMoodPillEl, tone.mood);
@@ -782,8 +792,9 @@ function renderDashboard() {
   setText(dashboardSetCounterEl, `Set ${displaySet}/${exercise.sets}`);
   setText(dashboardWorkoutTimerEl, `Workout Timer: ${formatElapsedTime(sessionState.elapsedSeconds)}`);
   setText(dashboardExerciseTimerEl, `Exercise Timer: ${formatElapsedTime(sessionState.exerciseElapsedSeconds)}`);
-  setText(dashboardProgressNoteEl, `${completionPercent}% complete`);
-  setProgressFill(completionPercent);
+  setText(dashboardProgressNoteEl, `${completionPercent}% complete • ${completedSets}/${totalSets} sets`);
+  setProgressFill(visibleCompletionPercent);
+  renderExerciseTrack(displayIndex);
   setText(dashboardExerciseEl, exercise.name);
   setText(
     dashboardPrescriptionEl,
@@ -812,6 +823,7 @@ function renderDashboard() {
     setText(dashboardPhasePillEl, "Complete");
     setProgressFill(100);
     setText(dashboardProgressNoteEl, "100% complete");
+    renderExerciseTrack(activeWorkout.length - 1, true);
     return;
   }
 
@@ -968,6 +980,55 @@ function setProgressFill(percent) {
   dashboardProgressFillEl.style.width = `${safe}%`;
 }
 
+function renderExerciseTrack(activeIndex, forceComplete = false) {
+  if (!dashboardExerciseTrackEl) {
+    return;
+  }
+  dashboardExerciseTrackEl.innerHTML = "";
+
+  if (!activeWorkout.length) {
+    return;
+  }
+
+  let chipToFocus = null;
+  activeWorkout.forEach((exercise, index) => {
+    const chip = document.createElement("div");
+    chip.className = "exercise-chip";
+    chip.title = exercise.name;
+    chip.setAttribute("role", "listitem");
+
+    const chipIndex = document.createElement("span");
+    chipIndex.className = "exercise-chip-index";
+    chipIndex.textContent = String(index + 1);
+    const chipName = document.createElement("span");
+    chipName.className = "exercise-chip-name";
+    chipName.textContent = shortenExerciseName(exercise.name);
+
+    if (forceComplete) {
+      chip.classList.add("is-complete");
+    } else if (index < activeIndex) {
+      chip.classList.add("is-complete");
+    } else if (index === activeIndex) {
+      chip.classList.add("is-current");
+      chipToFocus = chip;
+    } else {
+      chip.classList.add("is-upcoming");
+    }
+
+    chip.appendChild(chipIndex);
+    chip.appendChild(chipName);
+    dashboardExerciseTrackEl.appendChild(chip);
+  });
+
+  const shouldScroll =
+    (forceComplete && activeWorkout.length > 2) || (!forceComplete && activeIndex !== lastRenderedTrackIndex);
+  if (shouldScroll && chipToFocus && sessionState.started) {
+    chipToFocus.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }
+
+  lastRenderedTrackIndex = activeIndex;
+}
+
 function getCompletionPercent() {
   const totalSets = countTotalPlannedSets();
   if (!totalSets) {
@@ -1042,6 +1103,14 @@ function capitalize(value) {
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function shortenExerciseName(name) {
+  const words = name.split(" ");
+  if (words.length <= 2) {
+    return name;
+  }
+  return `${words.slice(0, 2).join(" ")}...`;
 }
 
 function registerServiceWorker() {
