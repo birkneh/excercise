@@ -262,6 +262,8 @@ button:hover {
 
 #dashboard-progress,
 #dashboard-workout-timer,
+#dashboard-set-counter,
+#dashboard-exercise-timer,
 #dashboard-prescription,
 #dashboard-status,
 #dashboard-rest-timer {
@@ -278,6 +280,14 @@ button:hover {
 #dashboard-workout-timer {
   color: #aef8d9;
   letter-spacing: 0.05em;
+}
+
+#dashboard-set-counter {
+  color: #dff4ff;
+}
+
+#dashboard-exercise-timer {
+  color: #d3ffe9;
 }
 
 #dashboard-status {

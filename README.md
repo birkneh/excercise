@@ -13,8 +13,9 @@ A static strength-training planner for full gym environments. The app generates 
 - Guided gym schedule runner:
   - `Start Workout Dashboard` opens a fullscreen focus dashboard over the planner
   - Workout timer counts continuously during the active session
+  - Set counter and exercise timer are shown for the current movement
   - Rest timer between exercises
-  - `Next` button can skip rest and move on immediately
+  - `Complete Set` button moves through sets/exercises and can skip rest while resting
   - `Stop` button discontinues workout and resets the active session
 
 The app runs fully in-browser with no backend and stores recent workout history in `localStorage`.

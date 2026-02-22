@@ -67,6 +67,8 @@ const dashboardCuesEl = document.getElementById("dashboard-cues");
 const dashboardDemoLinkEl = document.getElementById("dashboard-demo-link");
 const dashboardStatusEl = document.getElementById("dashboard-status");
 const dashboardWorkoutTimerEl = document.getElementById("dashboard-workout-timer");
+const dashboardSetCounterEl = document.getElementById("dashboard-set-counter");
+const dashboardExerciseTimerEl = document.getElementById("dashboard-exercise-timer");
 const dashboardRestTimerEl = document.getElementById("dashboard-rest-timer");
 const dashboardNextBtn = document.getElementById("dashboard-next-btn");
 const dashboardStopBtn =
@@ -79,8 +81,10 @@ let sessionState = {
   completed: false,
   isResting: false,
   currentIndex: 0,
+  currentSet: 1,
   restRemaining: 0,
-  elapsedSeconds: 0
+  elapsedSeconds: 0,
+  exerciseElapsedSeconds: 0
 };
 let restIntervalId = null;
 let workoutIntervalId = null;
@@ -101,7 +105,9 @@ function init() {
 
   generateBtn.addEventListener("click", buildWorkout);
   startWorkoutBtn.addEventListener("click", startWorkout);
-  dashboardNextBtn.addEventListener("click", handleNextAction);
+  if (dashboardNextBtn) {
+    dashboardNextBtn.addEventListener("click", handleNextAction);
+  }
   if (dashboardStopBtn) {
     dashboardStopBtn.textContent = "Stop";
     dashboardStopBtn.addEventListener("click", stopWorkout);
@@ -343,8 +349,10 @@ function resetSessionRunner(workout) {
     completed: false,
     isResting: false,
     currentIndex: 0,
+    currentSet: 1,
     restRemaining: 0,
-    elapsedSeconds: 0
+    elapsedSeconds: 0,
+    exerciseElapsedSeconds: 0
   };
 
   startWorkoutBtn.disabled = !workout.length;
@@ -352,12 +360,14 @@ function resetSessionRunner(workout) {
   runnerStatusEl.textContent = workout.length
     ? `Ready: ${workout.length} exercises. Tap Start Workout Dashboard.`
     : "Generate a workout to begin.";
-  dashboardNextBtn.disabled = true;
+  if (dashboardNextBtn) {
+    dashboardNextBtn.disabled = true;
+    dashboardNextBtn.textContent = "Complete Set";
+  }
   if (dashboardStopBtn) {
     dashboardStopBtn.disabled = !workout.length;
   }
-  dashboardNextBtn.textContent = "Next";
-  dashboardRestTimerEl.textContent = "Rest Timer: --:--";
+  setText(dashboardRestTimerEl, "Rest Timer: --:--");
   setDashboardVisible(false);
   renderDashboard();
   updateWorkoutHighlights();
@@ -373,22 +383,30 @@ function startWorkout() {
   }
 
   if (!sessionState.started) {
+    const currentExercise = getCurrentExercise();
     sessionState.started = true;
     sessionState.completed = false;
     sessionState.isResting = false;
     sessionState.currentIndex = Math.min(sessionState.currentIndex, activeWorkout.length - 1);
+    sessionState.currentSet = 1;
+    if (currentExercise) {
+      sessionState.currentSet = Math.min(sessionState.currentSet, currentExercise.sets);
+    }
     sessionState.restRemaining = 0;
+    sessionState.exerciseElapsedSeconds = 0;
     startWorkoutTimer();
     runnerStatusEl.textContent = "Workout running. Dashboard can be reopened anytime.";
   }
 
   startWorkoutBtn.disabled = false;
   startWorkoutBtn.textContent = "Resume Workout Dashboard";
-  dashboardNextBtn.disabled = false;
+  if (dashboardNextBtn) {
+    dashboardNextBtn.disabled = false;
+    dashboardNextBtn.textContent = sessionState.isResting ? "Skip Rest" : "Complete Set";
+  }
   if (dashboardStopBtn) {
     dashboardStopBtn.disabled = false;
   }
-  dashboardNextBtn.textContent = sessionState.isResting ? "Next (Skip Rest)" : "Next (Start Rest)";
   setDashboardVisible(true);
   renderDashboard();
   updateWorkoutHighlights();
@@ -401,25 +419,39 @@ function handleNextAction() {
 
   if (sessionState.isResting) {
     clearRestTimer();
-    moveToNextExercise();
+    advanceAfterRest();
     return;
   }
 
-  if (sessionState.currentIndex >= activeWorkout.length - 1) {
+  const currentExercise = getCurrentExercise();
+  if (!currentExercise) {
+    return;
+  }
+
+  const isFinalExercise = sessionState.currentIndex >= activeWorkout.length - 1;
+  const isFinalSet = sessionState.currentSet >= currentExercise.sets;
+  if (isFinalExercise && isFinalSet) {
     completeSession();
     return;
   }
 
-  const restSeconds = activeWorkout[sessionState.currentIndex].rest || 60;
+  const restSeconds = currentExercise.rest || 60;
   startRestCountdown(restSeconds);
 }
 
 function startRestCountdown(seconds) {
   clearRestTimer();
+  const nextTarget = getNextPhaseTarget();
   sessionState.isResting = true;
   sessionState.restRemaining = Math.max(5, Number(seconds));
-  dashboardNextBtn.textContent = "Next (Skip Rest)";
-  runnerStatusEl.textContent = `Resting before Exercise ${sessionState.currentIndex + 2}.`;
+  if (dashboardNextBtn) {
+    dashboardNextBtn.textContent = "Skip Rest";
+  }
+  if (nextTarget && nextTarget.type === "set") {
+    runnerStatusEl.textContent = `Resting before set ${nextTarget.setNumber}.`;
+  } else if (nextTarget && nextTarget.type === "exercise") {
+    runnerStatusEl.textContent = `Resting before Exercise ${nextTarget.exerciseIndex + 1}.`;
+  }
   renderDashboard();
   updateWorkoutHighlights();
 
@@ -429,23 +461,34 @@ function startRestCountdown(seconds) {
 
     if (sessionState.restRemaining <= 0) {
       clearRestTimer();
-      moveToNextExercise();
+      advanceAfterRest();
     }
   }, 1000);
 }
 
-function moveToNextExercise() {
+function advanceAfterRest() {
+  const nextTarget = getNextPhaseTarget();
   sessionState.isResting = false;
   sessionState.restRemaining = 0;
-  sessionState.currentIndex += 1;
-  dashboardNextBtn.textContent = "Next (Start Rest)";
+  sessionState.exerciseElapsedSeconds = 0;
+  if (dashboardNextBtn) {
+    dashboardNextBtn.textContent = "Complete Set";
+  }
 
-  if (sessionState.currentIndex >= activeWorkout.length) {
+  if (!nextTarget || nextTarget.type === "complete") {
     completeSession();
     return;
   }
 
-  runnerStatusEl.textContent = formatActiveExerciseText(sessionState.currentIndex);
+  if (nextTarget.type === "set") {
+    sessionState.currentSet = nextTarget.setNumber;
+  }
+  if (nextTarget.type === "exercise") {
+    sessionState.currentIndex = nextTarget.exerciseIndex;
+    sessionState.currentSet = 1;
+  }
+
+  runnerStatusEl.textContent = formatActiveSetText(sessionState.currentIndex, sessionState.currentSet);
   renderDashboard();
   updateWorkoutHighlights();
 }
@@ -456,9 +499,12 @@ function completeSession() {
   sessionState.completed = true;
   sessionState.started = false;
   sessionState.isResting = false;
+  sessionState.currentSet = 1;
   sessionState.restRemaining = 0;
-  dashboardNextBtn.disabled = true;
-  dashboardNextBtn.textContent = "Done";
+  if (dashboardNextBtn) {
+    dashboardNextBtn.disabled = true;
+    dashboardNextBtn.textContent = "Done";
+  }
   if (dashboardStopBtn) {
     dashboardStopBtn.disabled = true;
   }
@@ -481,18 +527,22 @@ function restartSession(keepDashboard = false) {
     completed: false,
     isResting: false,
     currentIndex: 0,
+    currentSet: 1,
     restRemaining: 0,
-    elapsedSeconds: 0
+    elapsedSeconds: 0,
+    exerciseElapsedSeconds: 0
   };
   startWorkoutBtn.disabled = false;
   startWorkoutBtn.textContent = "Start Workout Dashboard";
-  dashboardNextBtn.disabled = true;
-  dashboardNextBtn.textContent = "Next";
+  if (dashboardNextBtn) {
+    dashboardNextBtn.disabled = true;
+    dashboardNextBtn.textContent = "Complete Set";
+  }
   if (dashboardStopBtn) {
     dashboardStopBtn.disabled = false;
   }
   runnerStatusEl.textContent = `Ready: ${activeWorkout.length} exercises. Tap Start Workout Dashboard.`;
-  dashboardRestTimerEl.textContent = "Rest Timer: --:--";
+  setText(dashboardRestTimerEl, "Rest Timer: --:--");
   setDashboardVisible(keepDashboard);
   renderDashboard();
   updateWorkoutHighlights();
@@ -510,13 +560,17 @@ function stopWorkout() {
     completed: false,
     isResting: false,
     currentIndex: 0,
+    currentSet: 1,
     restRemaining: 0,
-    elapsedSeconds: 0
+    elapsedSeconds: 0,
+    exerciseElapsedSeconds: 0
   };
   startWorkoutBtn.disabled = false;
   startWorkoutBtn.textContent = "Start Workout Dashboard";
-  dashboardNextBtn.disabled = true;
-  dashboardNextBtn.textContent = "Next";
+  if (dashboardNextBtn) {
+    dashboardNextBtn.disabled = true;
+    dashboardNextBtn.textContent = "Complete Set";
+  }
   if (dashboardStopBtn) {
     dashboardStopBtn.disabled = false;
   }
@@ -549,6 +603,9 @@ function startWorkoutTimer() {
       return;
     }
     sessionState.elapsedSeconds += 1;
+    if (!sessionState.isResting) {
+      sessionState.exerciseElapsedSeconds += 1;
+    }
     renderDashboard();
   }, 1000);
 }
@@ -560,76 +617,158 @@ function clearWorkoutTimer() {
   }
 }
 
-function formatActiveExerciseText(index) {
+function formatActiveSetText(index, setNumber) {
   const exercise = activeWorkout[index];
-  return `Exercise ${index + 1}/${activeWorkout.length}: ${exercise.name}`;
+  return `Exercise ${index + 1}/${activeWorkout.length} • Set ${setNumber}/${exercise.sets}: ${exercise.name}`;
+}
+
+function getCurrentExercise() {
+  if (!activeWorkout.length) {
+    return null;
+  }
+  const safeIndex = Math.min(Math.max(0, sessionState.currentIndex), activeWorkout.length - 1);
+  return activeWorkout[safeIndex];
+}
+
+function getNextPhaseTarget() {
+  const currentExercise = getCurrentExercise();
+  if (!currentExercise) {
+    return { type: "complete" };
+  }
+  if (sessionState.currentSet < currentExercise.sets) {
+    return {
+      type: "set",
+      exerciseIndex: sessionState.currentIndex,
+      setNumber: sessionState.currentSet + 1
+    };
+  }
+  if (sessionState.currentIndex < activeWorkout.length - 1) {
+    return {
+      type: "exercise",
+      exerciseIndex: sessionState.currentIndex + 1,
+      setNumber: 1
+    };
+  }
+  return { type: "complete" };
+}
+
+function getDisplayTarget() {
+  if (!activeWorkout.length) {
+    return null;
+  }
+  if (!sessionState.isResting) {
+    return {
+      exerciseIndex: sessionState.currentIndex,
+      setNumber: sessionState.currentSet
+    };
+  }
+  const nextTarget = getNextPhaseTarget();
+  if (!nextTarget || nextTarget.type === "complete") {
+    return {
+      exerciseIndex: Math.max(0, activeWorkout.length - 1),
+      setNumber: getCurrentExercise() ? getCurrentExercise().sets : 1
+    };
+  }
+  return {
+    exerciseIndex: nextTarget.exerciseIndex,
+    setNumber: nextTarget.setNumber
+  };
 }
 
 function setDashboardVisible(visible) {
-  dashboardCardEl.hidden = !visible;
-  if (visible) {
-    dashboardCardEl.removeAttribute("hidden");
-  } else {
-    dashboardCardEl.setAttribute("hidden", "");
+  if (dashboardCardEl) {
+    dashboardCardEl.hidden = !visible;
+    if (visible) {
+      dashboardCardEl.removeAttribute("hidden");
+    } else {
+      dashboardCardEl.setAttribute("hidden", "");
+    }
   }
   document.body.classList.toggle("dashboard-mode", visible);
 }
 
 function renderDashboard() {
-  if (!activeWorkout.length) {
-    dashboardProgressEl.textContent = "";
-    dashboardExerciseEl.textContent = "-";
-    dashboardPrescriptionEl.textContent = "";
-    dashboardStatusEl.textContent = "Generate a workout to start dashboard mode.";
-    dashboardWorkoutTimerEl.textContent = "Workout Timer: 00:00";
-    dashboardRestTimerEl.textContent = "Rest Timer: --:--";
-    dashboardCuesEl.innerHTML = "";
-    dashboardDemoLinkEl.href = "#";
-    dashboardDemoLinkEl.setAttribute("aria-disabled", "true");
+  if (!dashboardCardEl) {
     return;
   }
 
-  const baseIndex = Math.min(sessionState.currentIndex, activeWorkout.length - 1);
-  const displayIndex =
-    sessionState.isResting && baseIndex < activeWorkout.length - 1 ? baseIndex + 1 : baseIndex;
+  if (!activeWorkout.length) {
+    setText(dashboardProgressEl, "");
+    setText(dashboardSetCounterEl, "Set 1/1");
+    setText(dashboardExerciseEl, "-");
+    setText(dashboardPrescriptionEl, "");
+    setText(dashboardStatusEl, "Generate a workout to start dashboard mode.");
+    setText(dashboardWorkoutTimerEl, "Workout Timer: 00:00");
+    setText(dashboardExerciseTimerEl, "Exercise Timer: 00:00");
+    setText(dashboardRestTimerEl, "Rest Timer: --:--");
+    if (dashboardCuesEl) {
+      dashboardCuesEl.innerHTML = "";
+    }
+    if (dashboardDemoLinkEl) {
+      dashboardDemoLinkEl.href = "#";
+      dashboardDemoLinkEl.setAttribute("aria-disabled", "true");
+    }
+    return;
+  }
+
+  const displayTarget = getDisplayTarget();
+  const displayIndex = Math.min(
+    Math.max(0, displayTarget ? displayTarget.exerciseIndex : sessionState.currentIndex),
+    activeWorkout.length - 1
+  );
   const exercise = activeWorkout[displayIndex];
+  const displaySet = Math.min(Math.max(1, displayTarget ? displayTarget.setNumber : 1), exercise.sets);
   const targets = exercise.muscles.map(capitalize).join(", ");
 
-  dashboardProgressEl.textContent = `Exercise ${displayIndex + 1} of ${activeWorkout.length}`;
-  dashboardWorkoutTimerEl.textContent = `Workout Timer: ${formatElapsedTime(sessionState.elapsedSeconds)}`;
-  dashboardExerciseEl.textContent = exercise.name;
-  dashboardPrescriptionEl.textContent = `${exercise.sets} sets x ${exercise.reps} reps | Rest ${exercise.rest}s | ${targets}`;
+  setText(dashboardProgressEl, `Exercise ${displayIndex + 1} of ${activeWorkout.length}`);
+  setText(dashboardSetCounterEl, `Set ${displaySet}/${exercise.sets}`);
+  setText(dashboardWorkoutTimerEl, `Workout Timer: ${formatElapsedTime(sessionState.elapsedSeconds)}`);
+  setText(dashboardExerciseTimerEl, `Exercise Timer: ${formatElapsedTime(sessionState.exerciseElapsedSeconds)}`);
+  setText(dashboardExerciseEl, exercise.name);
+  setText(
+    dashboardPrescriptionEl,
+    `${exercise.sets} sets x ${exercise.reps} reps | Rest ${exercise.rest}s | ${targets}`
+  );
 
-  dashboardCuesEl.innerHTML = "";
-  buildDemoCues(exercise).forEach((cue) => {
-    const li = document.createElement("li");
-    li.textContent = cue;
-    dashboardCuesEl.appendChild(li);
-  });
+  if (dashboardCuesEl) {
+    dashboardCuesEl.innerHTML = "";
+    buildDemoCues(exercise).forEach((cue) => {
+      const li = document.createElement("li");
+      li.textContent = cue;
+      dashboardCuesEl.appendChild(li);
+    });
+  }
 
-  dashboardDemoLinkEl.href = getDemoUrl(exercise);
-  dashboardDemoLinkEl.removeAttribute("aria-disabled");
+  if (dashboardDemoLinkEl) {
+    dashboardDemoLinkEl.href = getDemoUrl(exercise);
+    dashboardDemoLinkEl.removeAttribute("aria-disabled");
+  }
 
   if (sessionState.completed) {
-    dashboardStatusEl.textContent = "Workout complete. Tap Start to run another session.";
-    dashboardRestTimerEl.textContent = "Rest Timer: --:--";
+    setText(dashboardStatusEl, "Workout complete. Tap Start to run another session.");
+    setText(dashboardRestTimerEl, "Rest Timer: --:--");
     return;
   }
 
   if (!sessionState.started) {
-    dashboardStatusEl.textContent = "Tap Start Workout Dashboard to begin.";
-    dashboardRestTimerEl.textContent = "Rest Timer: --:--";
+    setText(dashboardStatusEl, "Tap Start Workout Dashboard to begin.");
+    setText(dashboardRestTimerEl, "Rest Timer: --:--");
     return;
   }
 
   if (sessionState.isResting) {
-    dashboardStatusEl.textContent = `Resting before ${exercise.name}.`;
-    dashboardRestTimerEl.textContent = `Rest Timer: ${formatTime(sessionState.restRemaining)}`;
+    const nextTarget = getNextPhaseTarget();
+    if (nextTarget && nextTarget.type === "set") {
+      setText(dashboardStatusEl, `Resting before set ${nextTarget.setNumber} of ${exercise.name}.`);
+    } else if (nextTarget && nextTarget.type === "exercise") {
+      setText(dashboardStatusEl, `Resting before ${exercise.name}.`);
+    }
+    setText(dashboardRestTimerEl, `Rest Timer: ${formatTime(sessionState.restRemaining)}`);
     return;
   }
 
-  dashboardStatusEl.textContent = formatActiveExerciseText(displayIndex);
-  dashboardRestTimerEl.textContent = "Rest Timer: --:--";
+  setText(dashboardStatusEl, formatActiveSetText(sessionState.currentIndex, sessionState.currentSet));
+  setText(dashboardRestTimerEl, "Rest Timer: --:--");
 }
 
 function updateWorkoutHighlights(markAllComplete = false) {
@@ -646,9 +785,11 @@ function updateWorkoutHighlights(markAllComplete = false) {
       return;
     }
 
-    const currentTarget = sessionState.isResting
-      ? Math.min(sessionState.currentIndex + 1, activeWorkout.length - 1)
-      : sessionState.currentIndex;
+    const nextTarget = getNextPhaseTarget();
+    const currentTarget =
+      sessionState.isResting && nextTarget && nextTarget.type === "exercise"
+        ? nextTarget.exerciseIndex
+        : sessionState.currentIndex;
 
     if (index < currentTarget) {
       item.classList.add("complete");
@@ -717,6 +858,12 @@ function formatElapsedTime(totalSeconds) {
     return `${hours}:${minutes}:${seconds}`;
   }
   return `${minutes}:${seconds}`;
+}
+
+function setText(element, value) {
+  if (element) {
+    element.textContent = value;
+  }
 }
 
 function capitalize(value) {
